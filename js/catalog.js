@@ -13,10 +13,19 @@ import csrSsr from './lessons/eng/csr-ssr.js';
 import renderingStrategies from './lessons/eng/rendering-strategies.js';
 import binarySearch from './lessons/dsa/binary-search.js';
 import loadBalancing from './lessons/sd/load-balancing.js';
+import scenEngReact from './scenarios/eng-react.js';
+import scenShipDsaSd from './scenarios/ship-dsa-sd.js';
+
+// Scenario labs live in their own files; attach them to their lessons.
+const SCENARIOS = { ...scenEngReact, ...scenShipDsaSd };
+for (const L of [browserPipeline, domVsVdom, renderCommit, diffingKeys, fiberLanes, effectTiming, rerenders, buildDeploy, csrSsr, renderingStrategies, binarySearch, loadBalancing]) {
+  if (SCENARIOS[L.id]) L.scenarios = SCENARIOS[L.id];
+}
 
 const soon = (id, title, summary) => ({ id, title, summary });
 
-export const TABS = [
+// RAW keeps the roadmap; TABS (what the app shows) drops unbuilt lessons and empty chapters.
+const RAW = [
   {
     id: 'eng', title: 'Engineering', short: 'Eng',
     headline: 'How the web actually works — from the browser’s pixels to React’s internals to how Vercel serves your app.',
@@ -102,6 +111,11 @@ export const TABS = [
     ],
   },
 ];
+
+export const TABS = RAW.map((t) => ({
+  ...t,
+  chapters: t.chapters.map((c) => ({ ...c, lessons: c.lessons.filter((l) => l.steps) })).filter((c) => c.lessons.length),
+}));
 
 export const LESSONS = {};
 for (const t of TABS) for (const c of t.chapters) for (const l of c.lessons) LESSONS[l.id] = l;

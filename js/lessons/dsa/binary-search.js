@@ -97,7 +97,7 @@ export default {
         'For target 20: mid 4 (16 < 20) → lo = 5; mid 7 (56 > 20) → hi = 6; mid 5 (23 > 20) → hi = 4. Now `lo = 5 > hi = 4`: the range is empty, the loop condition `lo <= hi` fails, return −1.',
         'Notice where `lo` ends: index 5, exactly where 20 <i>would</i> be inserted to keep the array sorted. That observation is the basis of the lower-bound variant.',
       ],
-      code: { file: 'binarySearch.js', lang: 'js', src: CODE, hl: [3, 10], focus: true },
+      code: { file: 'binarySearch.js', lang: 'js', src: CODE, hl: [3, 9], focus: true },
       vars: { lo: '5', hi: '4', result: '-1', 'insert position': '5 (= lo)' },
     },
     {

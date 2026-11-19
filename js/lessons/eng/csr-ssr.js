@@ -52,7 +52,7 @@ export default {
 </html>
 
 // vercel.json — so deep links like /dashboard don't 404 on refresh
-{ "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }] }`, hl: [9, 13] },
+{ "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }] }`, hl: [8, 13] },
     },
     {
       short: 'Download JS', title: 'CSR request 2: download the JavaScript and CSS', tag: 'internals',
@@ -148,7 +148,7 @@ export default async function Account() {
   <script id="__NEXT_DATA__">{"props":{"pageProps":{"user":{"name":"Sara"}}}}</script>
 
   <script src="/_next/static/chunks/app/account/page-9c1f.js" async></script>
-</body></html>`, hl: [3, 9] },
+</body></html>`, hl: [2, 5, 9] },
     },
     {
       short: 'Hydrate', title: 'SSR step 3: download JS from the CDN, then hydrate', tag: 'internals',

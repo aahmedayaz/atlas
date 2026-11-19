@@ -93,7 +93,7 @@ function Cart({ items }) {
       <button disabled={items.length === 0}>Checkout</button>
     </section>
   );
-}`, hl: [2, 4] },
+}`, hl: [2, 3] },
     },
     {
       short: 'JSX compiles', title: 'JSX is not HTML — it compiles to function calls', tag: 'code',
@@ -173,7 +173,7 @@ function Welcome({ name }) {
 // Using it creates an ELEMENT whose type is the function itself:
 const el = <Welcome name="Sara" />;
 // → { type: Welcome, props: { name: 'Sara' } }
-// React calls Welcome(props) later, during render.`, hl: [3, 4, 8, 9] },
+// React calls Welcome(props) later, during render.`, hl: [2, 3, 7, 8] },
       interview: '“Component vs element?” → a component is a function or class you define and reuse; an element is the plain object a component returns (or that JSX creates) describing one piece of UI.',
     },
     {

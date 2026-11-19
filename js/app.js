@@ -57,7 +57,8 @@ function renderSide(tab, activeId) {
   side.innerHTML = `<div class="course">▤ ${esc(tab.title)} <small>${all.filter(built).length} lessons</small></div>` +
     (tab.chapters.length ? '' : '<div style="padding:8px;color:var(--muted);font-size:12px">Curriculum coming soon.</div>') +
     tab.chapters.map((ch, ci) => {
-      const open = !activeId ? ci === 0 || ch.lessons.some(built) : ch.lessons.some((l) => l.id === activeId);
+      // collapsed by default; only the chapter of the lesson you are in opens
+      const open = !!activeId && ch.lessons.some((l) => l.id === activeId);
       return `<details${open ? ' open' : ''}><summary><span class="chev">▶</span><span class="fold" style="--c:${FOLDER[ci % FOLDER.length]}"></span>${String(ci + 1).padStart(2, '0')}. ${esc(ch.title)}<span class="cnt" data-ch="${ci}">0/${ch.lessons.length}</span></summary>
       ${ch.lessons.map((l, k) => built(l)
         ? `<a class="ls${l.id === activeId ? ' on' : ''}" href="#${l.id}" data-id="${l.id}"><span class="dot">${k + 1}</span><span>${esc(l.title)}</span></a>`
@@ -86,28 +87,24 @@ function paintSideDots() {
 // ---------- home (per tab) ----------
 function renderHome(tab) {
   const all = tab.chapters.flatMap((c) => c.lessons);
-  const ready = all.filter(built);
-  const steps = ready.reduce((a, l) => a + l.steps.length, 0);
-  main.innerHTML = `<div class="wrap">
+  const steps = all.reduce((a, l) => a + l.steps.length, 0);
+  const qs = all.reduce((a, l) => a + (l.interview?.length || 0), 0);
+  const sc = all.reduce((a, l) => a + (l.scenarios?.length || 0), 0);
+  main.innerHTML = `<div class="home">
     <section class="sheet hero">
-      <div class="eyebrow">${esc(tab.title)} · ${ready.length} lessons · ${steps} animated steps</div>
+      <div class="eyebrow">${esc(tab.title)} · ${all.length} lessons · ${steps} animated steps · ${sc} scenarios · ${qs} interview questions</div>
       <h1>${esc(tab.headline)}</h1>
       <p>${fmt(tab.blurb)}</p>
-      <div class="how">
-        <div><b>1 · Watch</b>Every idea is an animated diagram. Step through it with → or swipe.</div>
-        <div><b>2 · Read the code</b>Code panels highlight exactly the lines that matter at each step.</div>
-        <div><b>3 · Interview-proof it</b>Each lesson has graded questions with the reasoning, plus history and alternatives.</div>
-        <div><b>4 · Practise</b>Scenarios and a quiz close every lesson. Progress is saved in this browser.</div>
-      </div>
+      <div class="howrow"><span class="pill t-steps">1 · Watch the animation</span><span class="pill t-time">2 · Read the highlighted code</span><span class="pill t-q">3 · Solve the scenarios</span><span class="pill t-lvl">4 · Interview &amp; quiz</span></div>
     </section>
-    ${tab.chapters.map((ch, ci) => `<section class="chapter">
-      <h2>${String(ci + 1).padStart(2, '0')} · ${esc(ch.title)}</h2><div class="meta">${fmt(ch.blurb || '')}</div>
-      <div class="cards">${ch.lessons.map((l, k) => built(l) ? `
-        <a class="card" href="#${l.id}"><span class="num">${ci + 1}.${k + 1}</span><h3>${esc(l.title)}</h3><p>${fmt(l.summary)}</p>
-          <div class="row"><span class="badge lv-${l.level}">${l.level}</span><span class="badge">${l.steps.length} steps</span><span class="badge">${l.minutes} min</span>${l.interview ? `<span class="badge">${l.interview.length} interview Qs</span>` : ''}</div>
-          <div class="pbar"><i style="width:${Math.round(((prog(l.id).seen?.length || 0) / l.steps.length) * 100)}%"></i></div></a>`
-        : `<div class="card soon"><span class="num">${ci + 1}.${k + 1}</span><h3>${esc(l.title)}</h3><p>${fmt(l.summary || 'Planned')}</p><div class="row"><span class="badge">Coming soon</span></div></div>`).join('')}</div>
-    </section>`).join('')}
+    <div class="chgrid">${tab.chapters.map((ch, ci) => `<section class="sheet chcol">
+      <h2><span class="fold" style="--c:${FOLDER[ci % FOLDER.length]}"></span>${String(ci + 1).padStart(2, '0')} · ${esc(ch.title)}</h2>
+      <p class="meta">${fmt(ch.blurb || '')}</p>
+      <div class="rows">${ch.lessons.map((l, k) => {
+        const pct = Math.round(((prog(l.id).seen?.length || 0) / l.steps.length) * 100);
+        return `<a class="lrow" href="#${l.id}" title="${esc(l.summary.replace(/`/g, ''))}"><span class="n${prog(l.id).done ? ' done' : ''}">${prog(l.id).done ? '✓' : k + 1}</span><b>${esc(l.title)}</b>
+          <small>${l.level} · ${l.steps.length} steps · ${l.minutes} min${l.scenarios ? ` · ${l.scenarios.length} scenarios` : ''}</small><span class="pbar"><i style="width:${pct}%"></i></span></a>`;
+      }).join('')}</div></section>`).join('')}</div>
   </div>`;
 }
 
@@ -142,8 +139,9 @@ function route() {
     const w = where.get(L.id);
     setTabs(w.tab.id); renderSide(w.tab, L.id);
     const sub = m[2] || '';
-    const step = sub.startsWith('s') ? parseInt(sub.slice(1), 10) - 1 : 0;
-    const view = sub && !sub.startsWith('s') ? sub : 'steps';
+    const isStep = /^s\d+$/.test(sub);                 // "s4" is a step; "scenarios" is a view
+    const step = isStep ? parseInt(sub.slice(1), 10) - 1 : 0;
+    const view = sub && !isStep ? sub : 'steps';
     cleanup = renderLesson(main, L, {
       ...w, step, view, next: nextBuilt(L.id), progress: prog(L.id),
       save: (patch) => saveProg(L.id, patch), setHash,
@@ -152,7 +150,7 @@ function route() {
     side.querySelector('a.on')?.scrollIntoView({ block: 'nearest' });
   }
   if (!h || !LESSONS[h.replace(/-(s\d+|interview|scenarios|history|quiz|cheat)$/, '')]) document.title = 'Engineering Atlas — learn software engineering step by step';
-  scrollTo({ top: 0 });
+  scrollTo({ top: 0 }); main.scrollTop = 0;
 }
 function setTabs(id) { document.querySelectorAll('.tabs a').forEach((a) => a.classList.toggle('on', a.dataset.tab === id)); }
 addEventListener('hashchange', route);

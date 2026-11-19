@@ -69,7 +69,7 @@ export default {
   subtreeFlags: NoFlags,           // anything below?
   lanes: SyncLane,                 // pending work priority
   alternate: twinFiber,            // current <-> work-in-progress
-}`, hl: [7, 9, 10, 11, 14, 15, 16, 17] },
+}`, hl: [8, 10, 11, 12, 15, 16, 17, 18] },
     },
     {
       short: 'Linked tree', title: 'The tree is a linked list: child, sibling, return', tag: 'internals',
@@ -209,7 +209,7 @@ function Search({ products }) {
 function Results({ query }) {
   const deferred = useDeferredValue(query);   // lags behind during typing
   return <HugeList query={deferred} />;
-}`, hl: [10, 11, 22] },
+}`, hl: [9, 10, 23] },
     },
   ],
   interview: [

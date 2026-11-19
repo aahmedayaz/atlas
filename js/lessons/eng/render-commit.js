@@ -141,7 +141,7 @@ root.render(<App />);                                      // trigger #1`, hl: [
         'React uses [[event-delegation]]: one listener per event type on the root container. The click bubbles up to it; React finds the fiber for the clicked `<button>` and calls its `onClick` prop.',
         '`setCount(count + 1)` does <b>not</b> change `count` and does not touch the DOM. It pushes an update onto the hook’s queue, marks the App fiber and its parents with a priority [[lane]] (SyncLane for a click), and schedules a render. All `setState` calls in the same event are [[batching|batched]] into one render.',
       ],
-      code: { file: 'App.jsx', lang: 'jsx', src: APP, hl: [9], focus: true },
+      code: { file: 'App.jsx', lang: 'jsx', src: APP, hl: [8], focus: true },
       vars: { count: '0  (unchanged!)', 'hook.queue': '[ { action: 1 } ]', 'pending lane': 'SyncLane' },
     },
     {
@@ -187,7 +187,7 @@ function Counter() {
         'React starts at the root. Fibers with no pending work are <b>bailed out</b> — reused without calling anything. App has a pending update, so React processes its hook queue (count becomes 1) and calls `App()` again, which returns new elements with “Count: 1” and a new arrow function ƒ₂.',
         'Each draft fiber is the [[alternate]] of its current twin, so React reuses objects instead of allocating new ones every time. The real DOM is still untouched, and this phase can be paused or thrown away if something more urgent arrives.',
       ],
-      code: { file: 'App.jsx', lang: 'jsx', src: APP, hl: [5, 8, 9], focus: true },
+      code: { file: 'App.jsx', lang: 'jsx', src: APP, hl: [4, 7, 8], focus: true },
       vars: { count: '1', 'App called': 'yes (it has an update)', 'children of App': 'rendered too — they are part of its output' },
     },
     {
@@ -228,7 +228,7 @@ function Bad({ list }) {
   list.push('extra');        // mutates a prop!
   fetch('/api/track');       // side effect during render
   return <p>{renders}</p>;
-}`, hl: [4, 5, 12, 13, 14] },
+}`, hl: [3, 4, 11, 12, 13] },
       callout: { kind: 'warn', text: 'Don’t remove `<StrictMode>` to hide double logs or double requests. Make render pure and give effects proper cleanup — the double call is a development-only test.' },
     },
     {

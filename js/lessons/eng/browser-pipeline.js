@@ -73,7 +73,7 @@ export default {
     <p class="note">Free shipping over $50</p>
     <button>Pay</button>
   </body>
-</html>`, hl: [7, 8, 9, 10] },
+</html>`, hl: [6, 7, 8, 9] },
       callout: { kind: 'tip', text: 'A <b>preload scanner</b> runs ahead of the parser looking for `<link>`, `<script>` and `<img>` URLs, so downloads start early even while the main parser is paused.' },
       interview: 'Common trap: “JavaScript creates the DOM.” Correct answer: the browser’s rendering engine creates it from HTML; JS gets wrapper objects that point at the C++ nodes.',
     },
@@ -232,7 +232,7 @@ for (const card of cards) {
 // ✅ batched: one layout for the reads, one for the writes
 cards.forEach(c => (c.style.height = 'auto'));
 const heights = cards.map(c => c.offsetHeight);           // reads
-cards.forEach((c, i) => (c.style.height = heights[i] + 20 + 'px')); // writes`, hl: [4, 5, 10, 11, 12] },
+cards.forEach((c, i) => (c.style.height = heights[i] + 20 + 'px')); // writes`, hl: [3, 4, 5, 9, 10, 11] },
     },
     {
       short: 'Frame budget', title: 'One frame, 16.7 milliseconds', tag: 'concept',

@@ -52,7 +52,7 @@ function Demo() {
   });
   return <div ref={() => console.log('2 ref attached')} />;
 }
-// mount logs: 1 render → 2 ref attached → 3 layout effect → (paint) → 4 effect`, hl: [14] },
+// mount logs: 1 render → 2 ref attached → 3 layout effect → (paint) → 4 effect`, hl: [13] },
     },
     {
       short: 'useEffect', title: 'useEffect: synchronize with something outside React', tag: 'code',
@@ -75,7 +75,7 @@ function ChatRoom({ roomId }) {
   }, [roomId]);                              // re-sync when roomId changes
 
   return <h1>Welcome to {roomId}</h1>;
-}`, hl: [3, 4, 5, 6, 7] },
+}`, hl: [2, 3, 4, 5, 6] },
       callout: { kind: 'warn', text: 'Not everything needs an effect. Deriving data from props or state? Compute it during render. Responding to a click? Do it in the event handler. Effects are an escape hatch, not a lifecycle method.' },
     },
     {

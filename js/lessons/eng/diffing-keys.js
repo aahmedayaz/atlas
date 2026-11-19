@@ -46,7 +46,7 @@ function Panel({ fancy }) {
   return fancy
     ? <section className="fancy"><Counter /></section>
     : <div><Counter /></div>;
-}`, hl: [4, 5, 6] },
+}`, hl: [3, 4, 5] },
     },
     {
       short: 'Same type', title: 'Rule 1b: same type → keep the node, patch what changed', tag: 'concept',
@@ -83,7 +83,7 @@ function App() {
       </label>
     </div>
   );
-}`, hl: [6, 7] },
+}`, hl: [5, 6] },
     },
     {
       short: 'Lists without keys', title: 'Lists without keys are matched by index', tag: 'internals',
@@ -119,7 +119,7 @@ function Users({ users }) {
   );
 }
 // key is NOT passed as a prop: UserRow cannot read props.key.
-// Pass the id separately if the child needs it: <UserRow key={u.id} id={u.id} />`, hl: [5, 6] },
+// Pass the id separately if the child needs it: <UserRow key={u.id} id={u.id} />`, hl: [5] },
     },
     {
       short: 'Index-key bug', title: 'The `key={index}` bug, step by step', tag: 'scenario',
@@ -141,7 +141,7 @@ function Users({ users }) {
 function TodoRow({ todo }) {
   const [note, setNote] = useState('');   // state lives on the fiber
   return <li>{todo.text} <input value={note} onChange={e => setNote(e.target.value)} /></li>;
-}`, hl: [3, 6, 9] },
+}`, hl: [2, 5, 8] },
       interview: '“When is index as key OK?” → static lists that never reorder, filter or insert in the middle, and whose rows hold no state. Otherwise use a stable id.',
     },
     {
@@ -161,7 +161,7 @@ function UserPage({ userId }) {
 function ProfileEditorBad({ userId }) {
   const [draft, setDraft] = useState('');
   useEffect(() => { setDraft(''); }, [userId]);  // renders stale draft first, then clears
-}`, hl: [4] },
+}`, hl: [3] },
     },
     {
       short: 'Nested component trap', title: 'Never define a component inside another component', tag: 'scenario',
@@ -186,7 +186,7 @@ function Editor() {
   const [text, setText] = useState('');
   return <input value={text} onChange={e => setText(e.target.value)} />;
 }
-function Page() { return <Editor />; }`, hl: [5, 6, 7, 8, 13] },
+function Page() { return <Editor />; }`, hl: [4, 5, 6, 7, 8, 12] },
     },
   ],
   interview: [

@@ -45,7 +45,7 @@ export default function App() {
     </>
   );
 }
-// click → App, Header, Dashboard, StatsPanel, Metric, ActivityList, ExpensiveChart all log`, hl: [10, 12, 13] },
+// click → App, Header, Dashboard, StatsPanel, Metric, ActivityList, ExpensiveChart all log`, hl: [6, 10, 11, 12] },
     },
     {
       short: 'Unchanged props', title: 'Same props don’t stop a re-render', tag: 'concept', legend,
@@ -91,7 +91,7 @@ function Page({ chartData }) {
       onPointClick={(p) => select(p.id)}   // ❌ new function each render
     />
   );
-}`, hl: [7, 8] },
+}`, hl: [6, 7] },
     },
     {
       short: 'Stable references', title: 'Stabilize references with useMemo / useCallback — when it matters', tag: 'code', legend,
@@ -193,7 +193,7 @@ function Page() {
       <ExpensiveReport id="annual" />
     </ToggleShell>
   );
-}`, hl: [8, 15] },
+}`, hl: [7, 15] },
     },
     {
       short: 'React Compiler', title: 'React Compiler: automatic memoization at build time', tag: 'concept',
@@ -231,7 +231,7 @@ function ProductRow({ product }) {
   console.log(id, phase, actualMs.toFixed(1) + 'ms (base ' + baseMs.toFixed(1) + ')');
 }}>
   <Results />
-</Profiler>`, hl: [4, 8, 9, 10] },
+</Profiler>`, hl: [3, 8, 9, 10] },
     },
   ],
   interview: [

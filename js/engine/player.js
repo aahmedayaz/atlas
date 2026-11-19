@@ -1,16 +1,24 @@
-// Lesson view: centre sheet (title, diagram, code, stepper) + right rail (step narration, nav, checklist).
+// Lesson view. Desktop: everything fits the viewport (no page scroll) — panels scroll internally if they must.
+//   centre sheet: title · view tabs · [walkthrough: stats + controls · diagram (+ code) · stepper]
+//   right rail:   step narration · Back/Next   (other views: score / checklist)
 import { Scene } from './scene.js';
 import { esc, fmt, highlight } from './text.js';
 
 const VIEWS = [
   ['steps', 'Walkthrough', (l) => l.steps?.length],
+  ['scenarios', 'Scenario lab', (l) => l.scenarios?.length],
   ['interview', 'Interview', (l) => l.interview?.length],
-  ['scenarios', 'Scenarios', (l) => l.scenarios?.length],
-  ['history', 'History & alternatives', (l) => (l.history ? 1 : 0)],
   ['quiz', 'Quiz', (l) => l.quiz?.length],
+  ['history', 'History & alternatives', (l) => (l.history ? 1 : 0)],
   ['cheat', 'Cheat sheet', (l) => (l.cheat ? 1 : 0)],
 ];
 const COUNTED = new Set(['interview', 'scenarios', 'quiz']);
+const LV = { J: ['Junior', 'Beginner'], M: ['Mid', 'Intermediate'], S: ['Senior', 'Advanced'] };
+const lvBadge = (l) => `<span class="badge lv-${(LV[l] || LV.M)[1]}">${(LV[l] || LV.M)[0]}</span>`;
+const store = {
+  get(k, d) { try { const v = localStorage.getItem('atlas:' + k); return v == null ? d : JSON.parse(v); } catch { return d; } },
+  set(k, v) { try { localStorage.setItem('atlas:' + k, JSON.stringify(v)); } catch {} },
+};
 
 export function renderLesson(root, L, ctx) {
   const views = VIEWS.filter(([, , has]) => has(L));
@@ -21,17 +29,15 @@ export function renderLesson(root, L, ctx) {
       <section class="sheet center">
         <header class="lhead">
           <div class="top-row">
-            <div style="min-width:0;flex:1 1 360px">
-              <div class="crumb"><a href="#${ctx.tab.id}">${chNum}. ${esc(ctx.chapter.title)}</a> / Lesson ${ctx.index + 1} of ${ctx.chapter.lessons.length}</div>
-              <h1>${esc(L.title)}</h1>
-            </div>
+            <div class="crumb"><a href="#${ctx.tab.id}">${chNum}. ${esc(ctx.chapter.title)}</a> / Lesson ${ctx.index + 1} of ${ctx.chapter.lessons.length}</div>
             <div class="pills">
               <span class="pill t-time">◷ ${L.minutes} min</span>
               <span class="pill t-lvl">▮ ${esc(L.level)}</span>
               <span class="pill t-steps">☰ ${L.steps.length} steps</span>
             </div>
           </div>
-          <p class="sum">${fmt(L.summary)}</p>
+          <h1 title="${esc(L.title)}">${esc(L.title)}</h1>
+          <p class="sum" title="${esc(String(L.summary).replace(/`/g, ''))}">${fmt(L.summary)}</p>
         </header>
         <nav class="views">${views.map(([v, label, has]) => `<a href="#${L.id}${v === 'steps' ? '' : '-' + v}" class="${v === view ? 'on' : ''}">${label}${COUNTED.has(v) ? `<span class="n">${has(L)}</span>` : ''}</a>`).join('')}</nav>
         <div class="vbody"></div>
@@ -40,10 +46,11 @@ export function renderLesson(root, L, ctx) {
     </div>`;
   const body = root.querySelector('.vbody'), rail = root.querySelector('.rail');
   if (view === 'steps') return walkthrough(body, rail, L, ctx);
-  ({ interview, scenarios, history, quiz, cheat })[view](body, L, ctx);
-  rail.innerHTML = learnBox(L, ctx) + `<div class="sheet learnbox"><div class="h">Practice this lesson</div>
-    ${views.filter(([v]) => v !== view).map(([v, label]) => `<a href="#${L.id}${v === 'steps' ? '' : '-' + v}">→ ${label}</a>`).join('')}
-    ${ctx.next ? `<a href="#${ctx.next.id}" style="margin-top:6px;font-weight:700">Next lesson: ${esc(ctx.next.title)} →</a>` : ''}</div>`;
+  body.classList.add('scroll');
+  if (view === 'scenarios') return scenarioLab(body, rail, L, ctx);
+  if (view === 'quiz') return quiz(body, rail, L, ctx);
+  ({ interview, history, cheat })[view](body, L, ctx);
+  rail.innerHTML = learnBox(L, ctx) + practiceBox(L, ctx, views, view);
   return () => {};
 }
 
@@ -52,18 +59,27 @@ function learnBox(L, ctx) {
   const seen = (ctx.progress.seen || []).length, N = L.steps.length;
   return `<div class="sheet learnbox"><div class="h">You’ll learn</div>${L.learn.map((x, k) => `<div class="li${seen >= Math.ceil(((k + 1) / L.learn.length) * N) ? ' on' : ''}"><span>${fmt(x)}</span></div>`).join('')}</div>`;
 }
+function practiceBox(L, ctx, views, view) {
+  return `<div class="sheet learnbox"><div class="h">Practise this lesson</div>
+    ${views.filter(([v]) => v !== view).map(([v, label]) => `<a href="#${L.id}${v === 'steps' ? '' : '-' + v}">→ ${label}</a>`).join('')}
+    ${ctx.next ? `<a href="#${ctx.next.id}" style="margin-top:6px;font-weight:700">Next lesson: ${esc(ctx.next.title)} →</a>` : ''}</div>`;
+}
 
 // ---------------------------------------------------------------- walkthrough
 function walkthrough(body, rail, L, ctx) {
   const N = L.steps.length;
   let i = Math.min(Math.max(0, ctx.step || 0), N - 1);
   let playing = false, timer = null, prevFacts = {};
+  let showCode = store.get('code', true);
   body.innerHTML = `
-    <div class="stagebar"><div class="facts"></div><div class="ctrl"><button class="pbtn rp" title="Replay the animation">↻ Replay</button><button class="pbtn pz" title="Pause packets">❚❚ Pause</button><button class="pbtn spd" title="Animation speed">1×</button></div></div>
-    <div class="stage"><div class="svgwrap"></div></div>
-    <div class="legend"></div>
-    <div class="codep" hidden></div>
-    <div class="inlesson"><div class="hd">In this lesson <span class="pos"></span></div>
+    <div class="stagebar"><div class="facts"></div></div>
+    <div class="work">
+      <div class="stage"><div class="svgwrap"></div><div class="legend"></div></div>
+      <div class="codep" hidden></div>
+    </div>
+    <div class="inlesson"><div class="hd"><span class="hdl">In this lesson</span><span class="ctrl">
+      <button class="pbtn ctog" title="Show or hide the code panel">&lt;/&gt; Code</button>
+      <button class="pbtn rp" title="Replay the animation">↻ Replay</button><button class="pbtn pz" title="Pause packets">❚❚ Pause</button><button class="pbtn spd" title="Animation speed">1×</button></span><span class="pos"></span></div>
       <div class="stepper" role="tablist">${L.steps.map((s, k) => `<button data-k="${k}" title="${esc(s.title)}"><span class="n">${k + 1}</span><span class="t">${esc(s.short || s.title)}</span></button>`).join('')}</div>
     </div>`;
   rail.innerHTML = `
@@ -71,21 +87,28 @@ function walkthrough(body, rail, L, ctx) {
     <div class="navwrap">
       <div class="navbar"><button class="pbtn prev">← Back</button><button class="pbtn play" title="Auto-play (space)">▶</button><button class="pbtn green next"></button></div>
       <div class="kbdhint"><kbd>←</kbd> <kbd>→</kbd> step · <kbd>space</kbd> auto-play</div>
-    </div>
-    <div class="lb"></div>`;
+    </div>`;
   const $ = (s) => body.querySelector(s) || rail.querySelector(s);
   const scene = new Scene($('.svgwrap'));
   const stepBtns = [...body.querySelectorAll('.stepper button')];
   const seen = new Set(ctx.progress.seen || []);
-  // on narrow screens the narration sits right under the diagram instead of in the right rail
-  const mq = matchMedia('(max-width: 1240px)');
-  const narrEl = rail.querySelector('.narr'), navEl = rail.querySelector('.navwrap'), codeEl = body.querySelector('.codep');
-  const placeRail = () => { if (mq.matches) { body.insertBefore(narrEl, codeEl); body.insertBefore(navEl, codeEl); } else { rail.prepend(navEl); rail.prepend(narrEl); } };
+  // phones: the narration sits right under the diagram instead of in the rail
+  const mq = matchMedia('(max-width: 900px)');
+  const narrEl = rail.querySelector('.narr'), navEl = rail.querySelector('.navwrap'), workEl = body.querySelector('.work'), codeEl = body.querySelector('.codep');
+  const placeRail = () => { if (mq.matches) { workEl.insertBefore(narrEl, codeEl); workEl.insertBefore(navEl, codeEl); } else { rail.prepend(navEl); rail.prepend(narrEl); } };
   mq.addEventListener('change', placeRail); placeRail();
 
   $('.rp').onclick = () => scene.replay();
   $('.pz').onclick = () => { scene.paused = !scene.paused; $('.pz').textContent = scene.paused ? '▶ Play' : '❚❚ Pause'; };
   $('.spd').onclick = () => { const s = { 1: 0.5, 0.5: 2, 2: 1 }[scene.speed]; scene.speed = s; $('.spd').textContent = s + '×'; };
+  $('.ctog').onclick = () => { showCode = !showCode; store.set('code', showCode); paintCode(); };
+  function paintCode() {
+    const has = !!L.steps[i].code;
+    $('.work').classList.toggle('hascode', has && showCode);
+    $('.codep').hidden = !(has && showCode);
+    $('.ctog').disabled = !has;
+    $('.ctog').classList.toggle('green', has && showCode);
+  }
 
   function show(k, push = true) {
     i = Math.min(Math.max(0, k), N - 1);
@@ -94,17 +117,17 @@ function walkthrough(body, rail, L, ctx) {
     ctx.save({ seen: [...seen], max: Math.max(ctx.progress.max ?? -1, i), done: ctx.progress.done || seen.size === N });
     ctx.progress = { ...ctx.progress, seen: [...seen] };
     scene.set(s.scene || {});
-    const sw = $('.svgwrap'); sw.scrollLeft = (sw.scrollWidth - sw.clientWidth) / 2;   // centre wide diagrams on phones
+    const sw = $('.svgwrap'); sw.scrollLeft = (sw.scrollWidth - sw.clientWidth) / 2;
     stepBtns.forEach((b, k2) => { b.classList.toggle('on', k2 === i); b.classList.toggle('seen', seen.has(k2) && k2 !== i); });
     const sp = $('.stepper'), btn = stepBtns[i];
     sp.scrollTo({ left: btn.offsetLeft - sp.clientWidth / 2 + btn.clientWidth / 2, behavior: 'smooth' });
     $('.pos').textContent = `Step ${i + 1} of ${N}`;
     $('.legend').innerHTML = (s.legend || []).map((x) => { const [t, c] = String(x).split('|'); return `<span style="--lc:${c || 'var(--muted2)'}">${esc(t)}</span>`; }).join('');
-    // facts row (stat tiles above the diagram)
+    $('.legend').hidden = !s.legend;
     const facts = s.facts || [];
     $('.facts').innerHTML = facts.map(([k2, v]) => `<div class="${prevFacts[k2] !== undefined && prevFacts[k2] !== v ? 'chg' : ''}"><small>${esc(k2)}</small><b>${esc(v)}</b></div>`).join('');
     prevFacts = Object.fromEntries(facts);
-    // narration
+    $('.stagebar').hidden = !facts.length;
     $('.narr').innerHTML = `
       <div class="st">STEP ${i + 1} / ${N} ${s.tag ? `<span class="tag ${s.tag}">${s.tag}</span>` : ''}</div>
       <h2>${esc(s.title)}</h2>
@@ -113,11 +136,8 @@ function walkthrough(body, rail, L, ctx) {
       ${s.vars ? `<div class="vars"><div class="h">${esc(s.varsTitle || 'What changed')}</div>${Object.entries(s.vars).map(([k2, v]) => `<div class="li"><span><b>${esc(k2)}:</b> ${fmt(String(v))}</span></div>`).join('')}</div>` : ''}
       ${s.interview ? `<div class="iv"><b class="k">Interview angle</b>${fmt(s.interview)}</div>` : ''}`;
     $('.narr').scrollTop = 0;
-    $('.lb').innerHTML = learnBox(L, ctx);
-    // code
     const cp = $('.codep');
     if (s.code) {
-      cp.hidden = false;
       const hl = expand(s.code.hl);
       const lines = highlight(s.code.src.replace(/^\n/, ''), s.code.lang || 'js');
       cp.innerHTML = `<div class="ch"><span class="dots"><i></i><i></i><i></i></span><span>${esc(s.code.file || '')}</span><span class="lang">${esc(s.code.lang || 'js')}</span><button class="cp">Copy</button></div>
@@ -127,25 +147,27 @@ function walkthrough(body, rail, L, ctx) {
         try { await navigator.clipboard.writeText(s.code.src.replace(/^\n/, '')); ev.target.textContent = 'Copied'; } catch { ev.target.textContent = 'Select & copy'; }
         setTimeout(() => (ev.target.textContent = 'Copy'), 1400);
       };
+    }
+    paintCode();
+    if (s.code) {
       const first = cp.querySelector('.ln.hl');
-      if (first) { const pre = cp.querySelector('pre'); pre.scrollTop = Math.max(0, first.offsetTop - pre.clientHeight / 3); }
-    } else cp.hidden = true;
-    // nav
+      if (first) { const pre = cp.querySelector('pre'); requestAnimationFrame(() => (pre.scrollTop = Math.max(0, first.offsetTop - pre.clientHeight / 3))); }
+    }
     $('.prev').disabled = i === 0;
-    const nx = $('.next');
     let label;
     if (i < N - 1) label = `Next: ${L.steps[i + 1].short || L.steps[i + 1].title}`;
+    else if (L.scenarios) label = `Scenario lab: ${L.scenarios.length} problems`;
     else if (L.quiz) label = `Quiz: ${L.quiz.length} questions`;
     else if (ctx.next) label = `Next lesson: ${ctx.next.title}`;
     else label = `Back to ${ctx.tab.title}`;
-    nx.innerHTML = `<span>${esc(label)}</span><span>→</span>`;
+    $('.next').innerHTML = `<span>${esc(label)}</span><span>→</span>`;
     if (push) ctx.setHash(i === 0 ? L.id : `${L.id}-s${i + 1}`);
     if (playing) schedule();
   }
   function next() {
     if (i < N - 1) return show(i + 1);
     stop();
-    location.hash = L.quiz ? `${L.id}-quiz` : ctx.next ? ctx.next.id : ctx.tab.id;
+    location.hash = L.scenarios ? `${L.id}-scenarios` : L.quiz ? `${L.id}-quiz` : ctx.next ? ctx.next.id : ctx.tab.id;
   }
   function schedule() {
     clearTimeout(timer);
@@ -165,7 +187,6 @@ function walkthrough(body, rail, L, ctx) {
     else if (ev.key === ' ' && !ev.target.closest('button,a')) { ev.preventDefault(); $('.play').click(); }
   };
   addEventListener('keydown', onKey);
-  // swipe on the diagram (only when it is not horizontally scrollable)
   let sx = null;
   $('.stage').addEventListener('touchstart', (ev) => (sx = ev.touches[0].clientX), { passive: true });
   $('.stage').addEventListener('touchend', (ev) => { if (sx == null) return; const d = ev.changedTouches[0].clientX - sx; if (Math.abs(d) > 60 && $('.svgwrap').scrollWidth <= $('.svgwrap').clientWidth) { stop(); d < 0 ? next() : show(i - 1); } sx = null; });
@@ -182,48 +203,126 @@ function expand(hl) {
   return s;
 }
 
-// ---------------------------------------------------------------- other views
+// ---------------------------------------------------------------- scenario lab
+// One problem at a time: read the situation → commit to a diagnosis → see timeline, root cause, fix → answer the twist.
+function scenarioLab(body, rail, L, ctx) {
+  const S = L.scenarios;
+  const results = { ...(ctx.progress.scen || {}) };   // index → chosen option
+  let k = 0;
+  body.classList.add('lab');
+  const solved = () => Object.entries(results).filter(([i2, v]) => S[i2] && (S[i2].o ? v === S[i2].a : v === 'seen')).length;
+  const st = (j) => (results[j] == null ? '' : !S[j].o || results[j] === S[j].a ? 'ok' : 'x');
+  function paintRail() {
+    rail.innerHTML = `
+      <div class="sheet learnbox"><div class="h">Your score</div>
+        <div class="bigscore">${solved()} <small>/ ${S.length} diagnosed correctly</small></div>
+        <div class="dots5">${S.map((s, j) => `<i class="${st(j)}${j === k ? ' cur' : ''}"></i>`).join('')}</div></div>
+      <div class="sheet learnbox"><div class="h">How seniors attack a problem</div>
+        ${['Restate the symptom precisely — who, what, when, how often', 'Ask what changed (deploy, traffic, data, config)', 'Form 2–3 hypotheses before touching anything', 'Pick the cheapest test that rules one out', 'Fix the root cause, not the symptom', 'Prevent it: test, alert, or guardrail'].map((t, j) => `<div class="li on"><span><b>${j + 1}.</b> ${t}</span></div>`).join('')}</div>
+      ${practiceBox(L, ctx, VIEWS.filter(([, , h]) => h(L)), 'scenarios')}`;
+  }
+  function draw() {
+    const s = S[k];
+    const chosen = results[k];
+    const answered = chosen != null && s.o;
+    body.innerHTML = `
+      <div class="labbar">${S.map((x, j) => `<button class="chip${j === k ? ' on' : ''} ${st(j)}" data-j="${j}" title="${esc(x.title.replace(/`/g, ''))}">${j + 1}</button>`).join('')}
+        <span class="labpos">Scenario ${k + 1} of ${S.length}</span></div>
+      <div class="labgrid">
+        <section class="sheet labcase">
+          <div class="labmeta">${s.kind ? `<span class="tag scenario">${esc(s.kind)}</span>` : ''} ${lvBadge(s.lvl)}</div>
+          <h2>${fmt(s.title)}</h2>
+          <p class="sit">${fmt(s.sit)}</p>
+          ${s.evidence ? `<div class="evid"><div class="eh">${esc(s.evidence.label || 'Evidence')}</div><pre>${highlight(s.evidence.src.replace(/^\n/, ''), s.evidence.lang || 'text').join('\n')}</pre></div>` : ''}
+          ${s.o ? `<div class="ask">${fmt(s.ask || 'What is the most likely explanation?')}</div>
+            <div class="opts">${s.o.map((o, j) => `<button data-o="${j}" class="${answered ? (j === s.a ? 'right' : j === chosen ? 'wrong' : 'off') : ''}"${answered ? ' disabled' : ''}><span class="ol">${'ABCD'[j]}</span>${fmt(o)}</button>`).join('')}</div>`
+          : `<div class="ask">Think it through first: what happens, and why?</div><button class="pbtn green reveal">Show what happens</button>`}
+        </section>
+        <section class="sheet labans${answered || (!s.o && chosen === 'seen') ? '' : ' locked'}">
+          ${answered || (!s.o && chosen === 'seen') ? `
+            ${s.o ? `<div class="verdict ${chosen === s.a ? 'ok' : 'x'}">${chosen === s.a ? '✅ Correct diagnosis.' : `❌ Not quite — it’s <b>${'ABCD'[s.a]}</b>.`}</div><p>${fmt(s.why || '')}</p>` : ''}
+            <div class="h">What actually happens</div>
+            <div class="tl">${s.steps.map(([c, t]) => `<div class="ev ${c}"><p>${fmt(t)}</p></div>`).join('')}</div>
+            ${s.fix && s.fix !== '—' ? `<div class="callout tip"><div><b class="k">Fix / best practice</b>${fmt(s.fix)}</div></div>` : ''}
+            ${s.twist ? `<details class="twist"><summary><b>Twist:</b> ${fmt(s.twist.q)}</summary><p>${fmt(s.twist.a)}</p></details>` : ''}`
+          : `<div class="lockmsg"><div class="lk">?</div><b>Make your call first.</b><span>Committing to a diagnosis before seeing the answer is what builds problem-solving instinct. The timeline, root cause, fix and a follow-up twist unlock here.</span></div>`}
+        </section>
+      </div>
+      <div class="labnav"><button class="pbtn lp"${k === 0 ? ' disabled' : ''}>← Previous</button><button class="pbtn green ln2">${k < S.length - 1 ? 'Next scenario →' : L.quiz ? 'Take the quiz →' : 'Done →'}</button></div>`;
+    body.querySelectorAll('.chip').forEach((b) => (b.onclick = () => { k = +b.dataset.j; draw(); }));
+    body.querySelectorAll('.opts button').forEach((b) => (b.onclick = () => { results[k] = +b.dataset.o; ctx.save({ scen: results }); draw(); }));
+    const rv = body.querySelector('.reveal'); if (rv) rv.onclick = () => { results[k] = 'seen'; ctx.save({ scen: results }); draw(); };
+    body.querySelector('.lp').onclick = () => { if (k > 0) { k--; draw(); } };
+    body.querySelector('.ln2').onclick = () => { if (k < S.length - 1) { k++; draw(); } else location.hash = L.quiz ? `${L.id}-quiz` : ctx.next ? ctx.next.id : ctx.tab.id; };
+    body.scrollTop = 0;
+    paintRail();
+  }
+  const onKey = (ev) => {
+    if (ev.target.closest('input,textarea') || ev.metaKey || ev.ctrlKey) return;
+    if (ev.key === 'ArrowRight' && k < S.length - 1) { k++; draw(); }
+    else if (ev.key === 'ArrowLeft' && k > 0) { k--; draw(); }
+    else if (/^[a-d1-4]$/i.test(ev.key) && S[k].o && results[k] == null) { const j = isNaN(+ev.key) ? 'abcd'.indexOf(ev.key.toLowerCase()) : +ev.key - 1; if (j < S[k].o.length) { results[k] = j; ctx.save({ scen: results }); draw(); } }
+  };
+  addEventListener('keydown', onKey);
+  draw();
+  return () => removeEventListener('keydown', onKey);
+}
+
+// ---------------------------------------------------------------- quiz (one question at a time)
+function quiz(body, rail, L, ctx) {
+  const Q = L.quiz, ans = {};
+  let k = 0;
+  body.classList.add('lab');
+  const score = () => Object.entries(ans).filter(([i2, v]) => v === Q[i2].a).length;
+  function draw() {
+    const q = Q[k], chosen = ans[k], done = chosen != null;
+    body.innerHTML = `
+      <div class="labbar">${Q.map((x, j) => `<button class="chip${j === k ? ' on' : ''}${ans[j] == null ? '' : ans[j] === x.a ? ' ok' : ' x'}" data-j="${j}">${j + 1}</button>`).join('')}<span class="labpos">Question ${k + 1} of ${Q.length}</span></div>
+      <section class="sheet labcase quizcase">
+        <h2>${fmt(q.q)}</h2>
+        <div class="opts">${q.o.map((o, j) => `<button data-o="${j}" class="${done ? (j === q.a ? 'right' : j === chosen ? 'wrong' : 'off') : ''}"${done ? ' disabled' : ''}><span class="ol">${'ABCD'[j]}</span>${fmt(o)}</button>`).join('')}</div>
+        ${done ? `<div class="verdict ${chosen === q.a ? 'ok' : 'x'}">${chosen === q.a ? '✅ Correct.' : '❌ Not quite.'}</div><p>${fmt(q.why)}</p>` : ''}
+      </section>
+      <div class="labnav"><button class="pbtn lp"${k === 0 ? ' disabled' : ''}>← Previous</button><button class="pbtn green ln2">${k < Q.length - 1 ? 'Next question →' : ctx.next ? `Next lesson: ${esc(ctx.next.title)} →` : 'Done →'}</button></div>`;
+    body.querySelectorAll('.chip').forEach((b) => (b.onclick = () => { k = +b.dataset.j; draw(); }));
+    body.querySelectorAll('.opts button').forEach((b) => (b.onclick = () => {
+      ans[k] = +b.dataset.o;
+      if (Object.keys(ans).length === Q.length) ctx.save({ quiz: Math.max(score(), ctx.progress.quiz || 0) });
+      draw();
+    }));
+    body.querySelector('.lp').onclick = () => { if (k > 0) { k--; draw(); } };
+    body.querySelector('.ln2').onclick = () => { if (k < Q.length - 1) { k++; draw(); } else location.hash = ctx.next ? ctx.next.id : ctx.tab.id; };
+    rail.innerHTML = `<div class="sheet learnbox"><div class="h">Score</div><div class="bigscore">${score()} <small>/ ${Q.length}</small></div>
+      <div class="dots5">${Q.map((x, j) => `<i class="${ans[j] == null ? '' : ans[j] === x.a ? 'ok' : 'x'}${j === k ? ' cur' : ''}"></i>`).join('')}</div>
+      ${ctx.progress.quiz != null ? `<small style="color:var(--muted)">Best so far: ${ctx.progress.quiz} / ${Q.length}</small>` : ''}</div>` + learnBox(L, ctx) + practiceBox(L, ctx, VIEWS.filter(([, , h]) => h(L)), 'quiz');
+  }
+  const onKey = (ev) => {
+    if (ev.target.closest('input,textarea') || ev.metaKey || ev.ctrlKey) return;
+    if (ev.key === 'ArrowRight' && k < Q.length - 1) { k++; draw(); }
+    else if (ev.key === 'ArrowLeft' && k > 0) { k--; draw(); }
+    else if (/^[a-d1-4]$/i.test(ev.key) && ans[k] == null) { const j = isNaN(+ev.key) ? 'abcd'.indexOf(ev.key.toLowerCase()) : +ev.key - 1; if (j < Q[k].o.length) { ans[k] = j; draw(); } }
+  };
+  addEventListener('keydown', onKey);
+  draw();
+  return () => removeEventListener('keydown', onKey);
+}
+
+// ---------------------------------------------------------------- reference views
 function interview(root, L) {
-  const lv = { J: ['Junior', 'Beginner'], M: ['Mid', 'Intermediate'], S: ['Senior', 'Advanced'] };
   root.innerHTML = `<p class="vintro">Answer out loud first, then open the card. Each answer gives the <b>what</b>, the <b>why</b> (the reasoning interviewers listen for) and likely follow-ups.</p>` +
-    L.interview.map((q, k) => `<details class="qa"${k === 0 ? ' open' : ''}><summary><span>${fmt(q.q)}</span><span class="badge lvl lv-${(lv[q.lvl] || lv.M)[1]}">${(lv[q.lvl] || lv.M)[0]}</span></summary>
+    L.interview.map((q, k) => `<details class="qa"${k === 0 ? ' open' : ''}><summary><span>${fmt(q.q)}</span><span class="lvl">${lvBadge(q.lvl)}</span></summary>
       <div class="body">${(Array.isArray(q.a) ? q.a : [q.a]).map((p) => `<p>${fmt(p)}</p>`).join('')}
       ${q.why ? `<div class="why"><b>Why interviewers ask:</b> ${fmt(q.why)}</div>` : ''}
       ${q.follow ? `<div class="fu"><b>Likely follow-ups:</b> ${q.follow.map(fmt).join(' · ')}</div>` : ''}</div></details>`).join('');
-}
-
-function scenarios(root, L) {
-  root.innerHTML = `<p class="vintro">Real situations. Predict what happens before opening the timeline.</p>` +
-    L.scenarios.map((s) => `<div class="sc"><h3>${fmt(s.title)}</h3><p class="sit">${fmt(s.sit)}</p>
-      <details><summary class="pbtn">Show what happens</summary><div class="tl" style="margin-top:14px">${s.steps.map(([c, t]) => `<div class="ev ${c}"><p>${fmt(t)}</p></div>`).join('')}</div>
-      ${s.fix ? `<div class="callout tip"><div><b class="k">Fix / best practice</b>${fmt(s.fix)}</div></div>` : ''}</details></div>`).join('');
+  // accordion: opening one closes the others, so the panel stays short
+  root.querySelectorAll('details.qa').forEach((d) => d.addEventListener('toggle', () => { if (d.open) root.querySelectorAll('details.qa').forEach((o) => o !== d && (o.open = false)); }));
 }
 
 function history(root, L) {
   const H = L.history;
-  root.innerHTML = `
-    ${H.intro ? `<p class="vintro">${fmt(H.intro)}</p>` : ''}
-    <div class="prose"><h3>How we got here — who, when, why</h3><div class="tl">${H.timeline.map((t) => `<div class="ev ${t.c || ''}"><div class="yr">${esc(t.yr)}</div><h4>${fmt(t.title)}</h4><p>${fmt(t.text)}</p></div>`).join('')}</div></div>
-    ${H.alts ? `<div class="prose" style="margin-top:12px"><h3>Current alternatives — when to pick which</h3><div class="tblw"><table class="t"><tr>${H.alts.cols.map((c) => `<th>${esc(c)}</th>`).join('')}</tr>${H.alts.rows.map((r) => `<tr>${r.map((c) => `<td>${fmt(c)}</td>`).join('')}</tr>`).join('')}</table></div></div>` : ''}`;
+  root.innerHTML = `<div class="hgrid">
+    <div class="prose"><h3>How we got here — who, when, why</h3>${H.intro ? `<p class="vintro">${fmt(H.intro)}</p>` : ''}<div class="tl">${H.timeline.map((t) => `<div class="ev ${t.c || ''}"><div class="yr">${esc(t.yr)}</div><h4>${fmt(t.title)}</h4><p>${fmt(t.text)}</p></div>`).join('')}</div></div>
+    ${H.alts ? `<div class="prose"><h3>Current alternatives — when to pick which</h3><div class="tblw"><table class="t"><tr>${H.alts.cols.map((c) => `<th>${esc(c)}</th>`).join('')}</tr>${H.alts.rows.map((r) => `<tr>${r.map((c) => `<td>${fmt(c)}</td>`).join('')}</tr>`).join('')}</table></div></div>` : ''}</div>`;
 }
 
-function quiz(root, L, ctx) {
-  let score = 0, answered = 0;
-  root.innerHTML = `<div class="score">Score&nbsp;<span class="s">0</span>&nbsp;/ ${L.quiz.length}</div><div class="quiz">${L.quiz.map((q, k) => `<div class="q" data-k="${k}"><b>${k + 1}. ${fmt(q.q)}</b><div class="opts">${q.o.map((o, j) => `<button data-j="${j}">${fmt(o)}</button>`).join('')}</div><div class="fb" hidden></div></div>`).join('')}</div>`;
-  root.querySelectorAll('.q').forEach((el) => {
-    const q = L.quiz[+el.dataset.k];
-    let done = false;
-    el.querySelectorAll('button').forEach((b) => (b.onclick = () => {
-      if (done) return; done = true; answered++;
-      const j = +b.dataset.j, btns = el.querySelectorAll('button');
-      btns[q.a].classList.add('right');
-      if (j === q.a) score++; else b.classList.add('wrong');
-      root.querySelector('.score .s').textContent = score;
-      const fb = el.querySelector('.fb'); fb.hidden = false;
-      fb.innerHTML = (j === q.a ? '✅ <b>Correct.</b> ' : '❌ <b>Not quite.</b> ') + fmt(q.why);
-      if (answered === L.quiz.length) ctx.save({ quiz: Math.max(score, ctx.progress.quiz || 0) });
-    }));
-  });
-}
-
-function cheat(root, L) { root.innerHTML = `<div class="prose">${fmt(L.cheat)}</div>`; }
+function cheat(root, L) { root.innerHTML = `<div class="prose cheatp">${fmt(L.cheat)}</div>`; }

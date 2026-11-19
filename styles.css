@@ -329,29 +329,162 @@ table.t th{background:var(--panel2);font-weight:700}
 @keyframes burst{from{r:4;opacity:1}to{r:26;opacity:0}}
 .scene .cap{font-weight:600;font-size:12px;fill:var(--muted)}
 
-/* ================= responsive ================= */
-@media (max-width:1240px){
-  .lesson{grid-template-columns:minmax(0,1fr)}
-  .rail{position:static;max-height:none;overflow:visible;padding:0}
-  .how{grid-template-columns:repeat(2,1fr)}
-  .iconbtn.srch{min-width:0}
+/* ================= home (fits one screen) ================= */
+.home{display:flex;flex-direction:column;gap:12px;max-width:1400px;margin:0 auto}
+.home .hero{padding:18px 22px}
+.home .hero h1{font-size:clamp(18px,2vw,24px);margin:6px 0 6px}
+.home .hero p{font-size:12.5px;max-width:980px}
+.howrow{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.chgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:12px;align-items:start}
+.chcol{padding:14px 14px 10px;display:flex;flex-direction:column;min-height:0}
+.chcol h2{font-size:14.5px;margin:0;display:flex;align-items:center;gap:9px}
+.chcol .meta{color:var(--muted);font-size:11.5px;margin:4px 0 8px}
+.chcol .fold{width:16px;height:13px;border-radius:2px 3px 3px 3px;position:relative;flex:none;background:var(--c);border:1px solid color-mix(in srgb,var(--c) 70%,#000)}
+.rows{display:flex;flex-direction:column;gap:2px;overflow:auto;min-height:0}
+.lrow{display:grid;grid-template-columns:26px minmax(0,1fr);column-gap:10px;padding:5px 8px;border-radius:9px;text-decoration:none;color:var(--ink)}
+.lrow:hover{background:var(--panel2)}
+.lrow .n{grid-row:span 3;width:24px;height:24px;border-radius:50%;display:grid;place-items:center;border:1.5px solid var(--line2);font-size:11px;font-weight:700;background:var(--sheet);margin-top:1px}
+.lrow .n.done{background:var(--green);border-color:var(--edge)}
+.lrow b{font-size:12.5px;line-height:1.35;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lrow small{font-size:10.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lrow .pbar{margin-top:4px;height:3px}
+
+/* ================= lesson v2 pieces ================= */
+.lhead .top-row{flex-wrap:nowrap;align-items:center;justify-content:space-between}
+.lhead .crumb{margin:0;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lhead .pills{padding-top:0;flex:none;gap:6px}
+.lhead .pills .pill{font-size:11px;padding:2px 8px}
+.lhead h1{font-size:clamp(18px,1.9vw,24px);margin:4px 0 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lhead .sum{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:none;margin-top:2px}
+.stagebar[hidden]{display:none}
+.inlesson .hd{align-items:center;gap:10px}
+.inlesson .hd .ctrl{display:flex;gap:6px;margin-left:auto;text-transform:none;letter-spacing:0}
+.inlesson .hd .ctrl .pbtn{padding:3px 8px;font-size:11px;box-shadow:inset 0 1px 0 rgba(255,255,255,.55),1px 1.5px 0 var(--ink)}
+.inlesson .hd .pos{min-width:84px;text-align:right}
+.views{margin:10px 0}
+.work{display:flex;flex-direction:column;gap:10px;min-height:0}
+.codep{margin-top:0}
+.stage .legend{position:absolute;left:10px;bottom:8px;padding:2px 8px;background:color-mix(in srgb,var(--panel) 88%,transparent);border-radius:6px}
+.stage .legend[hidden]{display:none}
+.ctrl .pbtn:disabled{opacity:.35}
+/* scenario lab + quiz */
+.lab{display:flex;flex-direction:column;gap:10px}
+.labbar{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.chip{width:30px;height:30px;border-radius:8px;border:1px solid var(--line2);background:var(--sheet);font-weight:700;font-size:12px;color:var(--muted)}
+.chip.on{border-color:var(--ink);color:var(--ink);box-shadow:1px 1.5px 0 var(--ink)}
+.chip.ok{background:var(--green);color:var(--ink)}.chip.x{background:var(--rose);color:var(--ink)}
+.labpos{margin-left:auto;font-size:11.5px;color:var(--muted)}
+.labgrid{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:10px;flex:1;min-height:0}
+.labcase,.labans{padding:14px 16px;overflow:auto;min-height:0;box-shadow:none}
+.labmeta{display:flex;gap:6px;align-items:center;margin-bottom:6px}
+.labcase h2{font-size:15.5px;margin:0 0 6px}
+.labcase .sit{font-size:12.5px;color:var(--ink2);margin:0 0 8px}
+.evid{border:1px solid var(--ink);border-radius:9px;overflow:hidden;margin:0 0 10px;background:var(--code-bg)}
+.evid .eh{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#c6bfb7;background:#2a2622;padding:4px 10px}
+.evid pre{margin:0;padding:8px 10px;font:11.5px/1.55 var(--f-mono);color:var(--code-ink);overflow:auto;max-height:150px;white-space:pre}
+.ask{font-weight:700;font-size:12.5px;margin:4px 0 8px}
+.opts{display:grid;gap:6px}
+.opts button{display:flex;gap:10px;align-items:flex-start;text-align:left;border:1px solid var(--line2);background:var(--sheet);border-radius:9px;padding:8px 10px;font-size:12.5px;line-height:1.5}
+.opts button:hover:not(:disabled){border-color:var(--ink);transform:translate(-.5px,-.5px);box-shadow:1px 1.5px 0 var(--ink)}
+.opts button .ol{flex:none;width:20px;height:20px;border-radius:6px;border:1px solid var(--edge);display:grid;place-items:center;font-weight:800;font-size:11px;background:var(--panel)}
+.opts button.right{background:var(--green);border-color:var(--ink)}
+.opts button.wrong{background:var(--rose);border-color:var(--ink)}
+.opts button.off{opacity:.55}
+.opts button:disabled{cursor:default;color:var(--ink)}
+.labans .h{font-weight:700;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink2);margin:10px 0 6px}
+.labans p{font-size:12.5px;color:var(--ink2);margin:6px 0}
+.labans .tl{margin-left:6px}.labans .tl .ev{margin-bottom:8px}.labans .tl .ev p{margin:0}
+.labans.locked{display:grid;place-items:center;background:repeating-linear-gradient(45deg,var(--panel) 0 12px,var(--panel2) 12px 24px)}
+.lockmsg{max-width:300px;text-align:center;display:flex;flex-direction:column;gap:6px;align-items:center;font-size:12.5px;color:var(--muted)}
+.lockmsg b{color:var(--ink);font-size:13.5px}
+.lockmsg .lk{width:42px;height:42px;border-radius:12px;border:1.5px solid var(--ink);display:grid;place-items:center;font-weight:800;font-size:20px;background:var(--sand);box-shadow:var(--pop)}
+.verdict{font-weight:700;font-size:13px;padding:7px 10px;border-radius:8px;border:1px solid var(--ink)}
+.verdict.ok{background:var(--green)}.verdict.x{background:var(--rose)}
+.twist{margin-top:10px;border:1px dashed var(--edge);border-radius:9px;padding:8px 10px;background:var(--panel);font-size:12.5px}
+.twist summary{cursor:pointer}
+.twist p{margin:8px 0 0}
+.labnav{display:flex;justify-content:space-between;gap:8px}
+.quizcase{flex:1;max-width:900px}
+.quizcase .verdict{margin-top:10px}
+.bigscore{font-size:28px;font-weight:800;line-height:1.1}
+.bigscore small{font-size:11.5px;font-weight:500;color:var(--muted)}
+.dots5{display:flex;gap:4px;flex-wrap:wrap;margin:8px 0 2px}
+.dots5 i{width:14px;height:14px;border-radius:4px;border:1px solid var(--line2);background:var(--sheet)}
+.dots5 i.ok{background:var(--green2);border-color:var(--edge)}.dots5 i.x{background:var(--rose);border-color:var(--edge)}.dots5 i.cur{outline:2px solid var(--ink);outline-offset:1px}
+.hgrid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;align-items:start}
+.cheatp{columns:2 380px;column-gap:24px}.cheatp h3{break-after:avoid}.cheatp table{break-inside:avoid}
+
+/* ================= desktop: fit the viewport, no page scroll ================= */
+@media (min-width:901px){
+  html,body{height:100%;overflow:hidden}
+  .layout{height:calc(100vh - 54px);min-height:0;padding-bottom:12px}
+  .side{position:static;height:100%;padding-bottom:0}
+  .main{height:100%;overflow:auto;padding-bottom:0}
+  .lesson{height:100%;min-height:540px;grid-template-columns:minmax(0,1fr) 330px;align-items:stretch}
+  .center{display:flex;flex-direction:column;min-height:0;overflow:hidden;container-type:inline-size;padding:14px 16px 10px}
+  .vbody{flex:1;min-height:0;display:flex;flex-direction:column}
+  .vbody.scroll{overflow:auto;padding-right:4px}
+  .vbody.lab{overflow:hidden}
+  .vbody.lab .labgrid{flex:1}
+  .vbody.lab .quizcase{overflow:auto;min-height:0}
+  .work{flex:1}
+  .stage{flex:1;min-height:170px}
+  .stage .svgwrap{position:absolute;inset:0;overflow:hidden}
+  .stage svg{width:100%;height:100%;min-width:0;max-height:none}
+  .codep{flex:0 1 auto;max-height:36%;display:flex;flex-direction:column;min-height:0}
+  .codep pre{flex:1;min-height:0;max-height:none}
+  .inlesson{margin-top:8px;padding-top:6px}
+  .stepper{padding:8px 2px 0}
+  .rail{position:static;height:100%;max-height:none;overflow:hidden;padding:0}
+  .rail .narr{flex:1;min-height:0;overflow:auto}
+  .rail .learnbox{overflow:auto;flex:0 1 auto;min-height:0}
+  .navwrap{flex:none}
 }
-@media (max-width:900px){
-  .layout{grid-template-columns:1fr;padding:10px}
+/* wide centre column: code sits beside the diagram */
+@container (min-width:1020px){
+  .work.hascode{flex-direction:row}
+  .work.hascode .codep{max-height:none;flex:0 0 44%}
+}
+@media (min-width:901px) and (max-height:820px){
+  .views{margin:8px 0}.views a{padding:4px 10px}
+  .stepper .t{display:none}
+  .stepper button{flex-basis:40px}
+  .inlesson{margin-top:6px}
+  .home .hero p{display:none}
+}
+@media (min-width:901px) and (max-height:700px){ .lhead .sum{display:none} }
+/* sidebar becomes a drawer */
+@media (max-width:1100px){
+  .layout{grid-template-columns:minmax(0,1fr)}
   .side{position:fixed;left:0;top:54px;bottom:0;width:290px;z-index:40;transform:translateX(-102%);transition:transform .25s;background:var(--bg);box-shadow:var(--card-shadow);height:auto;padding:12px}
   body.side-open .side{transform:none}
   .menu-btn{display:inline-flex}
+  .iconbtn.srch{min-width:0}.iconbtn.srch .lbl{display:none}
+}
+@media (min-width:901px) and (max-width:1100px){ .lesson{grid-template-columns:minmax(0,1fr) 300px} }
+@media (min-width:1101px) and (max-width:1500px){ .layout{grid-template-columns:236px minmax(0,1fr)} .lesson{grid-template-columns:minmax(0,1fr) 310px} }
+/* phones: normal scrolling page */
+@media (max-width:900px){
+  .layout{padding:10px}
+  .lesson{grid-template-columns:minmax(0,1fr)}
+  .rail{position:static;max-height:none;overflow:visible;padding:0}
   .top{gap:8px;padding:8px 10px}
   .tabs{margin-left:0}
   .brand span.name{display:none}
   .tabs a{padding:5px 8px;font-size:11.5px}
+  .tabs .full{display:none}.tabs .short{display:inline}
   .iconbtn .lbl,.iconbtn kbd,.gl-link{display:none}
   .stage svg{min-width:560px}
+  .stage:after{content:'↔ swipe the diagram';position:absolute;right:8px;top:6px;font-size:10px;color:var(--muted);background:var(--panel);padding:0 6px;border-radius:5px;pointer-events:none}
   .facts div{min-width:0;flex:1 1 40%;padding:3px 9px}.facts b{font-size:13px}
-  .stage:after{content:'↔ swipe the diagram';position:absolute;right:8px;bottom:6px;font-size:10px;color:var(--muted);background:var(--panel);padding:0 6px;border-radius:5px;pointer-events:none}
-  .tabs .full{display:none}.tabs .short{display:inline}
   .stagebar .ctrl{margin-left:0}
-  .navwrap{position:sticky;bottom:8px;z-index:20;background:var(--bg);padding:6px;border-radius:12px}
+  .vbody>.narr{margin-top:12px}.vbody>.navwrap{margin-top:10px;position:sticky;bottom:8px;z-index:20;background:var(--bg);padding:6px;border-radius:12px}
   .center{padding:12px}
+  .lhead .top-row{flex-wrap:wrap}
+  .lhead .sum{white-space:normal}
+  .lhead h1{white-space:normal}
+  .work>.narr{margin-top:0}.work>.navwrap{position:sticky;bottom:8px;z-index:20;background:var(--bg);padding:6px;border-radius:12px}
+  .labgrid,.hgrid{grid-template-columns:minmax(0,1fr)}
+  .work{margin-top:0}
 }
 @media (prefers-reduced-motion:reduce){*{animation-duration:.01s!important;transition-duration:.01s!important}}
