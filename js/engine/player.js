@@ -74,7 +74,20 @@ function walkthrough(body, rail, L, ctx) {
   body.innerHTML = `
     <div class="stagebar"><div class="facts"></div></div>
     <div class="work">
-      <div class="stage"><div class="svgwrap"></div><div class="legend"></div></div>
+      <div class="stage" tabindex="-1">
+        <div class="svgwrap"></div><div class="legend"></div>
+        <button class="pbtn fsbtn" title="Fullscreen (F)" aria-label="Fullscreen">⛶ <span>Fullscreen</span></button>
+        <div class="fs-top"><span class="fs-pos"></span><b class="fs-title"></b><span class="sp"></span>
+          <button class="pbtn fs-notes" title="Notes & code (N)">☰ Notes &amp; code <kbd>N</kbd></button><button class="pbtn fs-exit" title="Exit fullscreen (Esc)">✕ Exit <kbd>Esc</kbd></button></div>
+        <div class="fs-drawer"></div>
+        <div class="fs-bottom">
+          <button class="pbtn fs-prev">← Back</button><button class="pbtn fs-play" title="Auto-play (space)">▶</button><button class="pbtn green fs-next"></button>
+          <span class="fs-gap"></span>
+          <button class="pbtn fs-rp" title="Replay (R)">↻ Replay</button><button class="pbtn fs-pz" title="Pause packets (P)">❚❚ Pause</button><button class="pbtn fs-spd" title="Speed (S)">1×</button>
+          <span class="fs-dots"></span>
+          <span class="fs-keys"><kbd>←</kbd><kbd>→</kbd> step · <kbd>space</kbd> play · <kbd>R</kbd> replay · <kbd>P</kbd> pause · <kbd>S</kbd> speed · <kbd>N</kbd> notes · <kbd>F</kbd> exit</span>
+        </div>
+      </div>
       <div class="codep" hidden></div>
     </div>
     <div class="inlesson"><div class="hd"><span class="hdl">In this lesson</span><span class="ctrl">
@@ -86,26 +99,63 @@ function walkthrough(body, rail, L, ctx) {
     <article class="sheet narr" aria-live="polite"></article>
     <div class="navwrap">
       <div class="navbar"><button class="pbtn prev">← Back</button><button class="pbtn play" title="Auto-play (space)">▶</button><button class="pbtn green next"></button></div>
-      <div class="kbdhint"><kbd>←</kbd> <kbd>→</kbd> step · <kbd>space</kbd> auto-play</div>
+      <div class="kbdhint"><kbd>←</kbd> <kbd>→</kbd> step · <kbd>space</kbd> auto-play · <kbd>F</kbd> fullscreen</div>
     </div>`;
   const $ = (s) => body.querySelector(s) || rail.querySelector(s);
   const scene = new Scene($('.svgwrap'));
   const stepBtns = [...body.querySelectorAll('.stepper button')];
   const seen = new Set(ctx.progress.seen || []);
   // phones: the narration sits right under the diagram instead of in the rail
+  let fsOn = false;
   const mq = matchMedia('(max-width: 900px)');
   const narrEl = rail.querySelector('.narr'), navEl = rail.querySelector('.navwrap'), workEl = body.querySelector('.work'), codeEl = body.querySelector('.codep');
-  const placeRail = () => { if (mq.matches) { workEl.insertBefore(narrEl, codeEl); workEl.insertBefore(navEl, codeEl); } else { rail.prepend(navEl); rail.prepend(narrEl); } };
+  const placeRail = () => { if (fsOn) return; if (mq.matches) { workEl.insertBefore(narrEl, codeEl); workEl.insertBefore(navEl, codeEl); } else { rail.prepend(navEl); rail.prepend(narrEl); } };
   mq.addEventListener('change', placeRail); placeRail();
 
-  $('.rp').onclick = () => scene.replay();
-  $('.pz').onclick = () => { scene.paused = !scene.paused; $('.pz').textContent = scene.paused ? '▶ Play' : '❚❚ Pause'; };
-  $('.spd').onclick = () => { const s = { 1: 0.5, 0.5: 2, 2: 1 }[scene.speed]; scene.speed = s; $('.spd').textContent = s + '×'; };
+  // controls exist twice (page + fullscreen HUD); keep both in sync
+  const $$ = (sel) => [...body.querySelectorAll(sel), ...rail.querySelectorAll(sel)];
+  const setText = (sel, t) => $$(sel).forEach((b) => (b.textContent = t));
+  const replay = () => scene.replay();
+  const togglePause = () => { scene.paused = !scene.paused; setText('.pz, .fs-pz', scene.paused ? '▶ Play' : '❚❚ Pause'); };
+  const cycleSpeed = () => { const s2 = { 1: 0.5, 0.5: 2, 2: 1 }[scene.speed]; scene.speed = s2; setText('.spd, .fs-spd', s2 + '×'); };
+  $$('.rp, .fs-rp').forEach((b) => (b.onclick = replay));
+  $$('.pz, .fs-pz').forEach((b) => (b.onclick = togglePause));
+  $$('.spd, .fs-spd').forEach((b) => (b.onclick = cycleSpeed));
+
+  // ---- fullscreen stage: real fullscreen when the browser allows it, otherwise a fixed overlay
+  const stageEl = body.querySelector('.stage'), drawer = stageEl.querySelector('.fs-drawer');
+  const factsEl = body.querySelector('.stagebar');
+  let realFs = false, notesOn = store.get('fsNotes', true);
+  const paintNotes = () => { stageEl.classList.toggle('notes', notesOn); stageEl.querySelector('.fs-notes').classList.toggle('green', notesOn); };
+  async function enterFs() {
+    if (fsOn) return;
+    fsOn = true;
+    stageEl.classList.add('fs'); document.body.classList.add('fs-open');
+    drawer.append(narrEl, codeEl); stageEl.append(factsEl);
+    paintNotes(); paintCode();
+    try { if (stageEl.requestFullscreen) { await stageEl.requestFullscreen({ navigationUI: 'hide' }); realFs = true; } } catch { realFs = false; }
+    stageEl.focus({ preventScroll: true });
+  }
+  function exitFs() {
+    if (!fsOn) return;
+    fsOn = false;
+    stageEl.classList.remove('fs', 'notes'); document.body.classList.remove('fs-open');
+    workEl.append(codeEl); body.insertBefore(factsEl, workEl);
+    placeRail(); paintCode();
+    if (realFs && document.fullscreenElement) document.exitFullscreen().catch(() => {});
+    realFs = false;
+  }
+  const toggleFs = () => (fsOn ? exitFs() : enterFs());
+  const onFsChange = () => { if (fsOn && realFs && !document.fullscreenElement) { realFs = false; exitFs(); } };
+  document.addEventListener('fullscreenchange', onFsChange);
+  stageEl.querySelector('.fsbtn').onclick = enterFs;
+  stageEl.querySelector('.fs-exit').onclick = exitFs;
+  stageEl.querySelector('.fs-notes').onclick = () => { notesOn = !notesOn; store.set('fsNotes', notesOn); paintNotes(); };
   $('.ctog').onclick = () => { showCode = !showCode; store.set('code', showCode); paintCode(); };
   function paintCode() {
     const has = !!L.steps[i].code;
     $('.work').classList.toggle('hascode', has && showCode);
-    $('.codep').hidden = !(has && showCode);
+    $('.codep').hidden = fsOn ? !has : !(has && showCode);
     $('.ctog').disabled = !has;
     $('.ctog').classList.toggle('green', has && showCode);
   }
@@ -122,6 +172,10 @@ function walkthrough(body, rail, L, ctx) {
     const sp = $('.stepper'), btn = stepBtns[i];
     sp.scrollTo({ left: btn.offsetLeft - sp.clientWidth / 2 + btn.clientWidth / 2, behavior: 'smooth' });
     $('.pos').textContent = `Step ${i + 1} of ${N}`;
+    stageEl.querySelector('.fs-pos').textContent = `${i + 1} / ${N}`;
+    stageEl.querySelector('.fs-title').textContent = s.title;
+    stageEl.querySelector('.fs-dots').innerHTML = L.steps.map((_, k2) => `<i class="${k2 === i ? 'on' : seen.has(k2) ? 'seen' : ''}" data-k="${k2}" title="Step ${k2 + 1}"></i>`).join('');
+    stageEl.querySelectorAll('.fs-dots i').forEach((d) => (d.onclick = () => { stop(); show(+d.dataset.k); }));
     $('.legend').innerHTML = (s.legend || []).map((x) => { const [t, c] = String(x).split('|'); return `<span style="--lc:${c || 'var(--muted2)'}">${esc(t)}</span>`; }).join('');
     $('.legend').hidden = !s.legend;
     const facts = s.facts || [];
@@ -161,12 +215,14 @@ function walkthrough(body, rail, L, ctx) {
     else if (ctx.next) label = `Next lesson: ${ctx.next.title}`;
     else label = `Back to ${ctx.tab.title}`;
     $('.next').innerHTML = `<span>${esc(label)}</span><span>→</span>`;
+    stageEl.querySelector('.fs-next').innerHTML = `<span>${esc(i < N - 1 ? label : 'Finish lesson')}</span><span>→</span>`;
+    stageEl.querySelector('.fs-prev').disabled = i === 0;
     if (push) ctx.setHash(i === 0 ? L.id : `${L.id}-s${i + 1}`);
     if (playing) schedule();
   }
   function next() {
     if (i < N - 1) return show(i + 1);
-    stop();
+    stop(); exitFs();
     location.hash = L.scenarios ? `${L.id}-scenarios` : L.quiz ? `${L.id}-quiz` : ctx.next ? ctx.next.id : ctx.tab.id;
   }
   function schedule() {
@@ -175,23 +231,30 @@ function walkthrough(body, rail, L, ctx) {
     const words = (Array.isArray(s.body) ? s.body.join(' ') : s.body || '').split(/\s+/).length + (s.callout ? 25 : 0);
     timer = setTimeout(() => (i < N - 1 ? show(i + 1) : stop()), Math.min(16000, 3500 + words * 230));
   }
-  function stop() { playing = false; clearTimeout(timer); $('.play').textContent = '▶'; }
-  $('.play').onclick = () => { playing = !playing; $('.play').textContent = playing ? '❚❚' : '▶'; playing ? schedule() : stop(); };
-  $('.prev').onclick = () => { stop(); show(i - 1); };
-  $('.next').onclick = () => { stop(); next(); };
+  function stop() { playing = false; clearTimeout(timer); setText('.play, .fs-play', '▶'); }
+  const togglePlay = () => { playing = !playing; setText('.play, .fs-play', playing ? '❚❚' : '▶'); playing ? schedule() : stop(); };
+  $$('.play, .fs-play').forEach((b) => (b.onclick = togglePlay));
+  $$('.prev, .fs-prev').forEach((b) => (b.onclick = () => { stop(); show(i - 1); }));
+  $$('.next, .fs-next').forEach((b) => (b.onclick = () => { stop(); next(); }));
   stepBtns.forEach((b) => (b.onclick = () => { stop(); show(+b.dataset.k); }));
   const onKey = (ev) => {
     if (ev.target.closest('input,textarea') || ev.metaKey || ev.ctrlKey || ev.altKey) return;
     if (ev.key === 'ArrowRight') { stop(); next(); }
     else if (ev.key === 'ArrowLeft') { stop(); show(i - 1); }
-    else if (ev.key === ' ' && !ev.target.closest('button,a')) { ev.preventDefault(); $('.play').click(); }
+    else if (ev.key === ' ' && !ev.target.closest('a')) { ev.preventDefault(); togglePlay(); }
+    else if (ev.key === 'f' || ev.key === 'F') { ev.preventDefault(); toggleFs(); }
+    else if (ev.key === 'Escape' && fsOn) { ev.preventDefault(); exitFs(); }
+    else if (ev.key === 'r' || ev.key === 'R') replay();
+    else if (ev.key === 'p' || ev.key === 'P') togglePause();
+    else if (ev.key === 's' || ev.key === 'S') cycleSpeed();
+    else if ((ev.key === 'n' || ev.key === 'N') && fsOn) stageEl.querySelector('.fs-notes').click();
   };
   addEventListener('keydown', onKey);
   let sx = null;
   $('.stage').addEventListener('touchstart', (ev) => (sx = ev.touches[0].clientX), { passive: true });
   $('.stage').addEventListener('touchend', (ev) => { if (sx == null) return; const d = ev.changedTouches[0].clientX - sx; if (Math.abs(d) > 60 && $('.svgwrap').scrollWidth <= $('.svgwrap').clientWidth) { stop(); d < 0 ? next() : show(i - 1); } sx = null; });
   show(i, false);
-  return () => { stop(); scene.destroy(); removeEventListener('keydown', onKey); mq.removeEventListener('change', placeRail); };
+  return () => { stop(); exitFs(); scene.destroy(); removeEventListener('keydown', onKey); mq.removeEventListener('change', placeRail); document.removeEventListener('fullscreenchange', onFsChange); };
 }
 
 function expand(hl) {

@@ -414,6 +414,52 @@ table.t th{background:var(--panel2);font-weight:700}
 .hgrid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;align-items:start}
 .cheatp{columns:2 380px;column-gap:24px}.cheatp h3{break-after:avoid}.cheatp table{break-inside:avoid}
 
+/* ================= fullscreen diagram stage ================= */
+.fsbtn{position:absolute;right:10px;top:10px;z-index:3;padding:4px 9px;font-size:11.5px}
+.fs-top,.fs-bottom,.fs-drawer{display:none}
+.stage.fs{position:fixed;inset:0;z-index:100;border:0;border-radius:0;background:var(--panel);display:block}
+.stage.fs:fullscreen{width:100vw;height:100vh}
+.stage.fs .fsbtn{display:none}
+.stage.fs .svgwrap{position:absolute;top:56px;bottom:66px;left:0;right:0;overflow:hidden;transition:right .25s}
+.stage.fs.notes .svgwrap{right:min(440px,42vw)}
+.stage.fs svg{width:100%;height:100%;min-width:0;max-height:none}
+.stage.fs .legend{bottom:76px;left:14px}
+.stage.fs .fs-top{display:flex;align-items:center;gap:12px;position:absolute;top:0;left:0;right:0;height:56px;padding:0 14px;background:var(--bg);border-bottom:1px solid var(--line);z-index:2}
+.fs-top .fs-pos{font-weight:800;font-size:12px;padding:3px 9px;border:1px solid var(--ink);border-radius:7px;background:var(--green);flex:none}
+.fs-top .fs-title{font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.fs-top .sp{flex:1}
+.fs-top .pbtn,.fs-bottom .pbtn{padding:5px 10px;font-size:12px;flex:none}
+.stage kbd{font:10px var(--f-mono);border:1px solid var(--line2);border-radius:4px;padding:0 4px;background:var(--panel);color:var(--muted)}
+.stage.fs .fs-bottom{display:flex;align-items:center;gap:8px;position:absolute;left:0;right:0;bottom:0;height:66px;padding:0 14px;background:var(--bg);border-top:1px solid var(--line);z-index:2}
+.fs-bottom .fs-next{min-width:220px;max-width:340px;justify-content:space-between}
+.fs-bottom .fs-next span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fs-bottom .fs-gap{width:10px;flex:none}
+.fs-dots{display:flex;gap:4px;margin-left:auto;flex-wrap:wrap;max-width:260px;justify-content:flex-end}
+.fs-dots i{width:12px;height:12px;border-radius:50%;border:1px solid var(--line2);background:var(--sheet);cursor:pointer}
+.fs-dots i.seen{background:var(--green2);border-color:var(--edge)}
+.fs-dots i.on{background:var(--ink);border-color:var(--ink);box-shadow:0 0 0 3px var(--green)}
+.fs-keys{font-size:10.5px;color:var(--muted);white-space:nowrap}
+.fs-keys kbd{margin:0 1px}
+.stage.fs.notes .fs-drawer{display:flex;flex-direction:column;gap:10px;position:absolute;top:56px;bottom:66px;right:0;width:min(440px,42vw);padding:12px;background:var(--bg);border-left:1px solid var(--line);overflow:hidden;z-index:1}
+.fs-drawer .narr{flex:1 1 auto;min-height:0;overflow:auto;box-shadow:none;margin:0}
+.fs-drawer .codep{flex:0 1 auto;max-height:45%;display:flex;flex-direction:column;min-height:0;margin:0}
+.fs-drawer .codep pre{flex:1;min-height:0;max-height:none;font-size:12px}
+.stage.fs>.stagebar{position:absolute;top:66px;left:14px;z-index:1;margin:0;pointer-events:none}
+.stage.fs>.stagebar .facts div{background:color-mix(in srgb,var(--panel) 90%,transparent)}
+body.fs-open{overflow:hidden}
+.codep[hidden],.stagebar[hidden]{display:none!important}
+.stage.fs:after{display:none}
+@media (max-width:1100px){ .fs-keys{display:none} }
+@media (max-width:700px){
+  .stage.fs.notes .fs-drawer{width:100%;top:auto;height:45%;border-left:0;border-top:1px solid var(--line)}
+  .stage.fs.notes .svgwrap{right:0;bottom:calc(45% + 66px)}
+  .fs-top .fs-title{font-size:13px}
+  .fs-top kbd,.fs-bottom .fs-rp,.fs-bottom .fs-spd,.fs-dots{display:none}
+  .fs-bottom .fs-next{min-width:0;flex:1}
+  .fsbtn span{display:none}
+  .stage.fs>.stagebar{display:none!important}
+}
+
 /* ================= desktop: fit the viewport, no page scroll ================= */
 @media (min-width:901px){
   html,body{height:100%;overflow:hidden}
