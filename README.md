@@ -24,6 +24,7 @@ js/catalog.js         the curriculum: tabs → chapters → lessons (built or "s
 js/glossary.js        every [[term]] used in lessons
 js/engine/
   scene.js            animated SVG renderer: nodes glide between steps, packets travel along edges
+  book.js             Magic Book modal (two-page spread, page turns, contents, keys, progress)
   layout.js           auto-layout: sizes nodes from their text, pushes overlaps apart, grows zones,
                       routes edges around nodes, places edge labels where nothing covers them, frames the camera
   build.js            helpers: n() node, e() edge, f() flow, z() zone, tree(), arr(), merge()
@@ -32,6 +33,8 @@ js/engine/
   icons.js            node icons
 js/lessons/<tab>/*.js one file per lesson — pure data
 js/scenarios/*.js     Scenario lab cases per lesson
+js/books/<id>.js      Magic Book per lesson: chapters from Basic → Core → Advanced, each with plain-words text,
+                      new words explained, a real-life example, a one-line takeaway and a check question
 js/simple/*.js        "In plain words" analogy + "Real example" for every step: { lessonId: [[plain, example], …] }
 ```
 

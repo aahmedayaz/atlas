@@ -22,8 +22,11 @@ import simpleShip from './simple/ship.js';
 const SCENARIOS = { ...scenEngReact, ...scenShipDsaSd };
 // "In plain words" + "Real example" per step
 const SIMPLE = { ...simpleEng, ...simpleShip };
+// lessons that have a Magic Book (js/books/<id>.js, loaded only when opened)
+const BOOKS = new Set(['browser-pipeline', 'dom-vs-vdom', 'render-commit', 'diffing-keys', 'fiber-lanes', 'effect-timing', 'rerenders', 'build-deploy', 'csr-ssr', 'rendering-strategies', 'binary-search', 'load-balancing']);
 for (const L of [browserPipeline, domVsVdom, renderCommit, diffingKeys, fiberLanes, effectTiming, rerenders, buildDeploy, csrSsr, renderingStrategies, binarySearch, loadBalancing]) {
   if (SCENARIOS[L.id]) L.scenarios = SCENARIOS[L.id];
+  L.book = BOOKS.has(L.id);
   (SIMPLE[L.id] || []).forEach((pair, k) => { if (L.steps[k] && pair) L.steps[k].simple = pair; });
 }
 

@@ -3,6 +3,7 @@
 //   right rail:   step narration · Back/Next   (other views: score / checklist)
 import { Scene } from './scene.js';
 import { layout } from './layout.js';
+import { openBook } from './book.js';
 import { esc, fmt, highlight } from './text.js';
 
 const VIEWS = [
@@ -35,6 +36,7 @@ export function renderLesson(root, L, ctx) {
               <span class="pill t-time">◷ ${L.minutes} min</span>
               <span class="pill t-lvl">▮ ${esc(L.level)}</span>
               <span class="pill t-steps">☰ ${L.steps.length} steps</span>
+              ${L.book ? '<button class="pbtn sm bookbtn" title="Theory from basic to advanced, in plain words (B)">📖 Magic Book</button>' : ''}
             </div>
           </div>
           <h1 title="${esc(L.title)}">${esc(L.title)}</h1>
@@ -46,6 +48,7 @@ export function renderLesson(root, L, ctx) {
       <aside class="rail"></aside>
     </div>`;
   const body = root.querySelector('.vbody'), rail = root.querySelector('.rail');
+  const bb = root.querySelector('.bookbtn'); if (bb) bb.onclick = () => openBook(L);
   if (view === 'steps') return walkthrough(body, rail, L, ctx);
   body.classList.add('scroll');
   if (view === 'scenarios') return scenarioLab(body, rail, L, ctx);
@@ -85,7 +88,7 @@ function walkthrough(body, rail, L, ctx) {
           <span class="fs-gap"></span>
           <button class="pbtn fs-rp" title="Replay (R)">↻ Replay</button><button class="pbtn fs-pz" title="Pause packets (P)">❚❚ Pause</button><button class="pbtn fs-spd" title="Speed (S)">1×</button>
           <span class="fs-dots"></span>
-          <span class="fs-keys"><kbd>←</kbd><kbd>→</kbd> step · <kbd>space</kbd> play · <kbd>R</kbd> replay · <kbd>P</kbd> pause · <kbd>S</kbd> speed · <kbd>N</kbd> notes · <kbd>F</kbd> exit</span>
+          <span class="fs-keys"><kbd>←</kbd><kbd>→</kbd> step · <kbd>space</kbd> play · <kbd>R</kbd> replay · <kbd>P</kbd> pause · <kbd>S</kbd> speed · <kbd>N</kbd> notes · <kbd>B</kbd> book · <kbd>F</kbd> exit</span>
         </div>
       </div>
       <div class="codep" hidden></div>
@@ -100,7 +103,7 @@ function walkthrough(body, rail, L, ctx) {
     <article class="sheet narr" aria-live="polite"></article>
     <div class="navwrap">
       <div class="navbar"><button class="pbtn prev">← Back</button><button class="pbtn play" title="Auto-play (space)">▶</button><button class="pbtn green next"></button></div>
-      <div class="kbdhint"><kbd>←</kbd> <kbd>→</kbd> step · <kbd>space</kbd> auto-play · <kbd>F</kbd> fullscreen</div>
+      <div class="kbdhint"><kbd>←</kbd> <kbd>→</kbd> step · <kbd>space</kbd> auto-play · <kbd>F</kbd> fullscreen${L.book ? ' · <kbd>B</kbd> book' : ''}</div>
     </div>`;
   const $ = (s) => body.querySelector(s) || rail.querySelector(s);
   const scene = new Scene($('.svgwrap'));
@@ -265,6 +268,7 @@ function walkthrough(body, rail, L, ctx) {
     else if (ev.key === 'p' || ev.key === 'P') togglePause();
     else if (ev.key === 's' || ev.key === 'S') cycleSpeed();
     else if ((ev.key === 'n' || ev.key === 'N') && fsOn) stageEl.querySelector('.fs-notes').click();
+    else if ((ev.key === 'b' || ev.key === 'B') && L.book) { stop(); openBook(L); }
   };
   addEventListener('keydown', onKey);
   let sx = null;
