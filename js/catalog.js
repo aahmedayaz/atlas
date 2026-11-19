@@ -15,11 +15,16 @@ import binarySearch from './lessons/dsa/binary-search.js';
 import loadBalancing from './lessons/sd/load-balancing.js';
 import scenEngReact from './scenarios/eng-react.js';
 import scenShipDsaSd from './scenarios/ship-dsa-sd.js';
+import simpleEng from './simple/eng.js';
+import simpleShip from './simple/ship.js';
 
 // Scenario labs live in their own files; attach them to their lessons.
 const SCENARIOS = { ...scenEngReact, ...scenShipDsaSd };
+// "In plain words" + "Real example" per step
+const SIMPLE = { ...simpleEng, ...simpleShip };
 for (const L of [browserPipeline, domVsVdom, renderCommit, diffingKeys, fiberLanes, effectTiming, rerenders, buildDeploy, csrSsr, renderingStrategies, binarySearch, loadBalancing]) {
   if (SCENARIOS[L.id]) L.scenarios = SCENARIOS[L.id];
+  (SIMPLE[L.id] || []).forEach((pair, k) => { if (L.steps[k] && pair) L.steps[k].simple = pair; });
 }
 
 const soon = (id, title, summary) => ({ id, title, summary });

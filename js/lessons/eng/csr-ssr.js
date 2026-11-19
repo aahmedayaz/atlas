@@ -67,7 +67,7 @@ export default {
     {
       short: 'React mounts', title: 'CSR step 3: V8 runs the bundle, React builds the DOM', tag: 'internals',
       scene: merge({ nodes: [A.br({ state: 'active', sub: 'V8 → React → DOM' }), A.cdn({ state: 'dim' }), A.api({ state: 'dim' }), screen('Loading…', 'upd')] },
-        tree({ id: 'root', label: 'div#root', kids: [{ id: 'app', label: 'App', kids: [{ id: 'sp', label: 'p "Loading…"' }] }] }, { x: 470, y: 120, dy: 85, w: 170, prefix: 't-', kind: 'react' })),
+        tree({ id: 'root', label: 'div#root', kids: [{ id: 'app', label: 'App', kids: [{ id: 'sp', label: 'p "Loading…"' }] }] }, { x: 470, y: 360, dy: 72, w: 170, prefix: 't-', kind: 'react' }), { zones: [z('dom', 360, 310, 220, 230, 'DOM React built', 'react')], edges: [e('br', 't-root', 'render()', { style: 'dashed' })] }),
       facts: [['HTML', '0.5 KB'], ['JS (gzip)', '~150 KB'], ['screen', 'Loading…']],
       body: [
         '[[v8]] parses, compiles and runs the bundle on the [[main-thread]]. `createRoot(root).render(<App />)` performs React’s first render: call components, build fibers, create DOM nodes, commit them into `#root`.',

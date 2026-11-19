@@ -146,13 +146,12 @@ root.render(<App />);                                      // trigger #1`, hl: [
     },
     {
       short: 'Snapshots', title: 'State is a snapshot inside each render', tag: 'code',
-      scene: { nodes: [
-        n('snap', 180, 120, 'this render’s snapshot', { kind: 'fiber', sub: 'count = 0' }),
-        n('a1', 500, 70, 'setCount(count + 1)', { kind: 'js', mono: true, sub: 'queue: replace with 1' }), n('a2', 500, 150, 'setCount(count + 1)', { kind: 'js', mono: true, sub: 'queue: replace with 1' }), n('a3', 500, 230, 'setCount(count + 1)', { kind: 'js', mono: true, sub: 'queue: replace with 1' }),
-        n('r1', 840, 150, 'next count = 1', { kind: 'note', icon: false, state: 'bad' }),
-        n('b1', 500, 330, 'setCount(c => c + 1)', { kind: 'js', mono: true, sub: '0 → 1' }), n('b2', 500, 410, 'setCount(c => c + 1)', { kind: 'js', mono: true, sub: '1 → 2' }), n('b3', 500, 490, 'setCount(c => c + 1)', { kind: 'js', mono: true, sub: '2 → 3' }),
-        n('r2', 840, 410, 'next count = 3', { kind: 'note', icon: false, state: 'ok' }),
-      ], edges: [e('snap', 'a1', '', { style: 'dashed' }), e('snap', 'a2', '', { style: 'dashed' }), e('snap', 'a3', '', { style: 'dashed' }), e('a2', 'r1'), e('b1', 'b2'), e('b2', 'b3'), e('b3', 'r2')], h: 540 },
+      scene: { zones: [z('za', 20, 90, 1000, 120, 'count + 1 · every call reads the snapshot: count = 0', 'js'), z('zb', 20, 260, 1000, 120, 'c => c + 1 · each call gets the previous result', 'react')], nodes: [
+        n('a1', 150, 160, 'setCount(count + 1)', { kind: 'js', mono: true, sub: 'replace with 1' }), n('a2', 410, 160, 'setCount(count + 1)', { kind: 'js', mono: true, sub: 'replace with 1' }), n('a3', 670, 160, 'setCount(count + 1)', { kind: 'js', mono: true, sub: 'replace with 1' }),
+        n('r1', 900, 160, 'next count = 1', { kind: 'note', icon: false, state: 'bad' }),
+        n('b1', 150, 330, 'setCount(c => c + 1)', { kind: 'js', mono: true, sub: '0 → 1' }), n('b2', 410, 330, 'setCount(c => c + 1)', { kind: 'js', mono: true, sub: '1 → 2' }), n('b3', 670, 330, 'setCount(c => c + 1)', { kind: 'js', mono: true, sub: '2 → 3' }),
+        n('r2', 900, 330, 'next count = 3', { kind: 'note', icon: false, state: 'ok' }),
+      ], edges: [e('a1', 'a2'), e('a2', 'a3'), e('a3', 'r1'), e('b1', 'b2'), e('b2', 'b3'), e('b3', 'r2')] },
       body: [
         'Inside one render, `count` is a constant — a snapshot. Calling the setter three times with `count + 1` queues “replace with 1” three times, so the next value is 1, not 3.',
         'Pass an <b>updater function</b> when the next value depends on the previous one. React runs the queued updaters in order during the next render, each receiving the result of the previous one. Updaters must be pure: no API calls or logging side effects inside them.',

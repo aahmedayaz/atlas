@@ -46,7 +46,12 @@ document.querySelector('.theme').onclick = () => {
   document.documentElement.dataset.theme = dark ? 'dark' : 'light';
   try { localStorage.setItem('atlas:theme', dark ? 'dark' : 'light'); } catch {}
 };
-document.querySelector('.menu-btn').onclick = () => document.body.classList.toggle('side-open');
+// the course menu: a drawer on small screens; on wide screens it can be tucked away to give diagrams more room
+const wideSide = () => matchMedia('(min-width:1101px)').matches;
+const setSideHidden = (on) => { document.body.classList.toggle('side-hidden', on); try { localStorage.setItem('atlas:side', on ? 'hidden' : 'shown'); } catch {} window.dispatchEvent(new Event('resize')); };
+try { if (localStorage.getItem('atlas:side') === 'hidden') document.body.classList.add('side-hidden'); } catch {}
+document.querySelector('.menu-btn').onclick = () => (wideSide() ? setSideHidden(false) : document.body.classList.toggle('side-open'));
+side.addEventListener('click', (ev) => { if (ev.target.closest('.side-hide')) setSideHidden(true); });
 
 // ---------- sidebar ----------
 let sideTab = null;
@@ -54,7 +59,7 @@ const FOLDER = ['#e3ae3c', '#3fa456', '#7c63d0', '#e8834d', '#2f86ce', '#d9577a'
 function renderSide(tab, activeId) {
   sideTab = tab;
   const all = tab.chapters.flatMap((c) => c.lessons);
-  side.innerHTML = `<div class="course">▤ ${esc(tab.title)} <small>${all.filter(built).length} lessons</small></div>` +
+  side.innerHTML = `<div class="course">▤ ${esc(tab.title)} <small>${all.filter(built).length} lessons</small><button class="side-hide" title="Hide the menu (more room for diagrams)" aria-label="Hide the course menu">⇤</button></div>` +
     (tab.chapters.length ? '' : '<div style="padding:8px;color:var(--muted);font-size:12px">Curriculum coming soon.</div>') +
     tab.chapters.map((ch, ci) => {
       // collapsed by default; only the chapter of the lesson you are in opens

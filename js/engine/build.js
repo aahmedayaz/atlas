@@ -39,7 +39,6 @@ export function tree(spec, o = {}) {
   const est = (s) => Math.max(s.w || w, String(s.label ?? '').length * 8.8 + 26, String(s.sub ?? '').length * 7.3 + 26);
   const widest = (s) => Math.max(est(s), ...(s.kids || []).map(widest));
   let dx = Math.max(o.dx ?? 150, widest(spec) + 14);
-  if (total > 1) dx = Math.min(dx, Math.max(o.dx ?? 150, 960 / (total - 1 + 1)));
   const nodes = [], edges = [];
   let cursor = x - ((total - 1) * dx) / 2;
   const walk = (s, depth, parent) => {

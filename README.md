@@ -24,12 +24,22 @@ js/catalog.js         the curriculum: tabs → chapters → lessons (built or "s
 js/glossary.js        every [[term]] used in lessons
 js/engine/
   scene.js            animated SVG renderer: nodes glide between steps, packets travel along edges
+  layout.js           auto-layout: sizes nodes from their text, pushes overlaps apart, grows zones,
+                      routes edges around nodes, places edge labels where nothing covers them, frames the camera
   build.js            helpers: n() node, e() edge, f() flow, z() zone, tree(), arr(), merge()
   player.js           lesson view: walkthrough player + interview / scenarios / history / quiz / cheat sheet
   text.js             prose formatting ([[term]], `code`) and a small syntax highlighter
   icons.js            node icons
 js/lessons/<tab>/*.js one file per lesson — pure data
+js/scenarios/*.js     Scenario lab cases per lesson
+js/simple/*.js        "In plain words" analogy + "Real example" for every step: { lessonId: [[plain, example], …] }
 ```
+
+## Diagram positions are hints
+
+Lesson files give rough `x`/`y` positions. `layout.js` then cleans the picture on every step: no node overlaps,
+no edge through a node, no covered label or zone title, and wide empty gaps are squeezed so text stays readable.
+The same result is used on every screen size; the camera simply frames it.
 
 ## Add a lesson
 

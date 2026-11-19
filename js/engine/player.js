@@ -2,6 +2,7 @@
 //   centre sheet: title · view tabs · [walkthrough: stats + controls · diagram (+ code) · stepper]
 //   right rail:   step narration · Back/Next   (other views: score / checklist)
 import { Scene } from './scene.js';
+import { layout } from './layout.js';
 import { esc, fmt, highlight } from './text.js';
 
 const VIEWS = [
@@ -76,7 +77,6 @@ function walkthrough(body, rail, L, ctx) {
     <div class="work">
       <div class="stage" tabindex="-1">
         <div class="svgwrap"></div><div class="legend"></div>
-        <button class="pbtn fsbtn" title="Fullscreen (F)" aria-label="Fullscreen">⛶ <span>Fullscreen</span></button>
         <div class="fs-top"><span class="fs-pos"></span><b class="fs-title"></b><span class="sp"></span>
           <button class="pbtn fs-notes" title="Notes & code (N)">☰ Notes &amp; code <kbd>N</kbd></button><button class="pbtn fs-exit" title="Exit fullscreen (Esc)">✕ Exit <kbd>Esc</kbd></button></div>
         <div class="fs-drawer"></div>
@@ -91,6 +91,7 @@ function walkthrough(body, rail, L, ctx) {
       <div class="codep" hidden></div>
     </div>
     <div class="inlesson"><div class="hd"><span class="hdl">In this lesson</span><span class="ctrl">
+      <button class="pbtn fsbtn" title="Fullscreen (F)" aria-label="Fullscreen">⛶<span>Fullscreen</span></button>
       <button class="pbtn ctog" title="Show or hide the code panel">&lt;/&gt; Code</button>
       <button class="pbtn rp" title="Replay the animation">↻ Replay</button><button class="pbtn pz" title="Pause packets">❚❚ Pause</button><button class="pbtn spd" title="Animation speed">1×</button></span><span class="pos"></span></div>
       <div class="stepper" role="tablist">${L.steps.map((s, k) => `<button data-k="${k}" title="${esc(s.title)}"><span class="n">${k + 1}</span><span class="t">${esc(s.short || s.title)}</span></button>`).join('')}</div>
@@ -109,6 +110,17 @@ function walkthrough(body, rail, L, ctx) {
   let fsOn = false;
   const mq = matchMedia('(max-width: 900px)');
   const narrEl = rail.querySelector('.narr'), navEl = rail.querySelector('.navwrap'), workEl = body.querySelector('.work'), codeEl = body.querySelector('.codep');
+  // wide centre column: code beside the diagram, unless this lesson's pictures are so wide that stacking shows them bigger
+  const views = L.steps.map((st) => layout(st.scene || {}).view);
+  const arrange = () => {
+    const W = workEl.clientWidth, H = workEl.clientHeight;
+    if (!W || !H) return;
+    const med = (f) => { const v = views.map(f).sort((a, b) => a - b); return v[Math.floor(v.length * 0.35)]; };
+    const row = med((v) => Math.min((W * 0.56 - 12) / v.w, (H - 34) / v.h));
+    const col = med((v) => Math.min(W / v.w, (H * 0.66 - 46) / v.h));
+    workEl.classList.toggle('stack', col > row * 1.08);
+  };
+  const ro = new ResizeObserver(arrange); ro.observe(workEl);
   const placeRail = () => { if (fsOn) return; if (mq.matches) { workEl.insertBefore(narrEl, codeEl); workEl.insertBefore(navEl, codeEl); } else { rail.prepend(navEl); rail.prepend(narrEl); } };
   mq.addEventListener('change', placeRail); placeRail();
 
@@ -146,9 +158,11 @@ function walkthrough(body, rail, L, ctx) {
     realFs = false;
   }
   const toggleFs = () => (fsOn ? exitFs() : enterFs());
+  $('.svgwrap').addEventListener('dblclick', (ev) => { ev.preventDefault(); toggleFs(); });
+  $('.svgwrap').title = 'Double-click for full screen';
   const onFsChange = () => { if (fsOn && realFs && !document.fullscreenElement) { realFs = false; exitFs(); } };
   document.addEventListener('fullscreenchange', onFsChange);
-  stageEl.querySelector('.fsbtn').onclick = enterFs;
+  body.querySelector('.fsbtn').onclick = enterFs;
   stageEl.querySelector('.fs-exit').onclick = exitFs;
   stageEl.querySelector('.fs-notes').onclick = () => { notesOn = !notesOn; store.set('fsNotes', notesOn); paintNotes(); };
   $('.ctog').onclick = () => { showCode = !showCode; store.set('code', showCode); paintCode(); };
@@ -167,7 +181,7 @@ function walkthrough(body, rail, L, ctx) {
     ctx.save({ seen: [...seen], max: Math.max(ctx.progress.max ?? -1, i), done: ctx.progress.done || seen.size === N });
     ctx.progress = { ...ctx.progress, seen: [...seen] };
     scene.set(s.scene || {});
-    const sw = $('.svgwrap'); sw.scrollLeft = (sw.scrollWidth - sw.clientWidth) / 2;
+    $('.svgwrap').scrollLeft = 0;
     stepBtns.forEach((b, k2) => { b.classList.toggle('on', k2 === i); b.classList.toggle('seen', seen.has(k2) && k2 !== i); });
     const sp = $('.stepper'), btn = stepBtns[i];
     sp.scrollTo({ left: btn.offsetLeft - sp.clientWidth / 2 + btn.clientWidth / 2, behavior: 'smooth' });
@@ -178,6 +192,8 @@ function walkthrough(body, rail, L, ctx) {
     stageEl.querySelectorAll('.fs-dots i').forEach((d) => (d.onclick = () => { stop(); show(+d.dataset.k); }));
     $('.legend').innerHTML = (s.legend || []).map((x) => { const [t, c] = String(x).split('|'); return `<span style="--lc:${c || 'var(--muted2)'}">${esc(t)}</span>`; }).join('');
     $('.legend').hidden = !s.legend;
+    stageEl.classList.toggle('hasfacts', !!(s.facts && s.facts.length));
+    stageEl.classList.toggle('haslegend', !!s.legend);
     const facts = s.facts || [];
     $('.facts').innerHTML = facts.map(([k2, v]) => `<div class="${prevFacts[k2] !== undefined && prevFacts[k2] !== v ? 'chg' : ''}"><small>${esc(k2)}</small><b>${esc(v)}</b></div>`).join('');
     prevFacts = Object.fromEntries(facts);
@@ -185,6 +201,7 @@ function walkthrough(body, rail, L, ctx) {
     $('.narr').innerHTML = `
       <div class="st">STEP ${i + 1} / ${N} ${s.tag ? `<span class="tag ${s.tag}">${s.tag}</span>` : ''}</div>
       <h2>${esc(s.title)}</h2>
+      ${s.simple ? `<div class="simple"><div><b class="k">In plain words</b>${fmt(s.simple[0])}</div>${s.simple[1] ? `<div><b class="k">Real example</b>${fmt(s.simple[1])}</div>` : ''}</div>` : ''}
       ${(Array.isArray(s.body) ? s.body : [s.body]).filter(Boolean).map((p) => (/^\s*<(ul|ol|table|div)/.test(p) ? fmt(p) : `<p>${fmt(p)}</p>`)).join('')}
       ${s.callout ? `<div class="callout ${s.callout.kind || 'insight'}"><div><b class="k">${esc(s.callout.title || { tip: 'Good to know', warn: 'Watch out', insight: 'Key insight', bad: 'Common mistake' }[s.callout.kind || 'insight'])}</b>${fmt(s.callout.text)}</div></div>` : ''}
       ${s.vars ? `<div class="vars"><div class="h">${esc(s.varsTitle || 'What changed')}</div>${Object.entries(s.vars).map(([k2, v]) => `<div class="li"><span><b>${esc(k2)}:</b> ${fmt(String(v))}</span></div>`).join('')}</div>` : ''}
@@ -254,7 +271,7 @@ function walkthrough(body, rail, L, ctx) {
   $('.stage').addEventListener('touchstart', (ev) => (sx = ev.touches[0].clientX), { passive: true });
   $('.stage').addEventListener('touchend', (ev) => { if (sx == null) return; const d = ev.changedTouches[0].clientX - sx; if (Math.abs(d) > 60 && $('.svgwrap').scrollWidth <= $('.svgwrap').clientWidth) { stop(); d < 0 ? next() : show(i - 1); } sx = null; });
   show(i, false);
-  return () => { stop(); exitFs(); scene.destroy(); removeEventListener('keydown', onKey); mq.removeEventListener('change', placeRail); document.removeEventListener('fullscreenchange', onFsChange); };
+  return () => { ro.disconnect(); stop(); exitFs(); scene.destroy(); removeEventListener('keydown', onKey); mq.removeEventListener('change', placeRail); document.removeEventListener('fullscreenchange', onFsChange); };
 }
 
 function expand(hl) {
