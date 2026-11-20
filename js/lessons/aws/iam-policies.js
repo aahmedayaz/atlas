@@ -47,7 +47,7 @@ export default {
       body: [
         '<b>Identity-based</b> policies attach to a user, group or role and say what *that identity* can do. Three flavours: **AWS managed** (`ReadOnlyAccess`, maintained by AWS, can change over time), **customer managed** (your reusable, versioned policies — up to 6,144 characters each) and **inline** (embedded in one identity, deleted with it).',
         '<b>Resource-based</b> policies attach to a *resource* — S3 bucket policies, KMS key policies, SQS queue policies, Lambda resource policies, and a role’s [[trust-policy|trust policy]]. They contain a **Principal**: *who* the statement is about (an account, role, user, or service like `cloudfront.amazonaws.com`).',
-        'By default a role can have 10 managed policies attached (raise to 20); inline policy size limits are 2,048 characters (user), 5,120 (group) and 10,240 (role).',
+        'A role can have 20 managed policies attached by default (raised from 10 in Aug 2026; up to 25 via Service Quotas); inline policy size limits are 2,048 characters (user), 5,120 (group) and 10,240 (role).',
       ],
       code: { file: 'bucket-policy.json', lang: 'json', src: `
 {

@@ -186,7 +186,7 @@ const post = await createPresignedPost(s3, { Bucket: 'acme-uploads', Key: 'in/\$
       { yr: '2016–2020', title: 'S3 Inventory and Batch Operations', text: 'Scheduled object listings (2016) and managed bulk jobs (2019).' },
       { yr: '2020', title: 'AWS SDK for JavaScript v3', text: 'Modular clients, middleware stack, streaming bodies, lib-storage Upload.', c: 'g' },
       { yr: '2024', title: 'Conditional writes', text: 'If-None-Match and If-Match on PutObject/CompleteMultipartUpload.' },
-      { yr: '2025', title: 'Default checksums; S3 Metadata; 50 TB objects', text: 'SDKs add integrity checksums by default; live metadata tables; bigger objects.', c: 'g' },
+      { yr: 'Dec 2024–2025', title: 'Default checksums; S3 Metadata; 50 TB objects', text: 'SDKs add integrity checksums by default; live metadata tables; bigger objects.', c: 'g' },
     ],
     alts: { cols: ['Need', 'Use', 'Avoid'], rows: [['Big upload', 'lib-storage Upload / aws s3 cp', 'single PutObject over 5 GB'], ['Big download', 'stream + parallel ranges', 'transformToString on GBs'], ['List a few thousand keys', 'paginator', 'unpaginated loops'], ['Inventory of billions', 'S3 Inventory / S3 Metadata', 'LIST crawls'], ['Schema for SQL', 'Glue crawler + Athena', 'hand-written DDL for every file'], ['Browser upload', 'presigned PUT/POST', 'proxying files through your API']] },
   },

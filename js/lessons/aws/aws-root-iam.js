@@ -19,10 +19,10 @@ export default {
       short: 'The account', title: 'An AWS account is a sealed box with one bill', tag: 'concept',
       scene: { zones: [acct()], nodes: [you(), root({ state: 'dim' }), iamSvc({ state: 'dim' }), res({ state: 'active' })], edges: [e('you', 'res', 'sign up: email, card, phone')],
         flows: [f('you>res', 'sign up', { kind: 'user', every: 2.4 })] },
-      facts: [['account ID', '12 digits'], ['regions', '30+'], ['bill', '1 per account'], ['default limits', 'per account']],
+      facts: [['account ID', '12 digits'], ['regions', '39 (124 AZs)'], ['bill', '1 per account'], ['default limits', 'per account']],
       body: [
         'When you sign up you get an [[aws-account]]: a container with a 12-digit **account ID** (e.g. `123456789012`). Every resource you create — a bucket, a function, a database — belongs to exactly one account, and the account receives one bill.',
-        'Inside the account, most resources live in one [[region]] (like `us-east-1` or `eu-west-1`), and each region has several [[az|Availability Zones]]. A few services are **global**: IAM, CloudFront, Route 53, Organizations.',
+        'Inside the account, most resources live in one [[region]] (like `us-east-1` or `eu-west-1`), and each region has at least three [[az|Availability Zones]] (the *Regions & Availability Zones* lesson goes deep). A few services are **global**: IAM, CloudFront, Route 53, Organizations.',
         'The account is also the strongest wall in AWS. Nothing in account A can touch account B unless both sides explicitly allow it. That is why companies use many accounts (dev, staging, prod) under [[organizations|AWS Organizations]].',
       ],
       callout: { kind: 'tip', title: 'Think of it as', text: 'A rented building with its own address (account ID), its own electricity bill, and walls nobody else can walk through.' },

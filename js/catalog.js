@@ -14,6 +14,7 @@ import renderingStrategies from './lessons/eng/rendering-strategies.js';
 import binarySearch from './lessons/dsa/binary-search.js';
 import loadBalancing from './lessons/sd/load-balancing.js';
 import awsRootIam from './lessons/aws/aws-root-iam.js';
+import awsRegions from './lessons/aws/aws-regions.js';
 import awsCliCredentials from './lessons/aws/aws-cli-credentials.js';
 import cdkBootstrapDeploy from './lessons/aws/cdk-bootstrap-deploy.js';
 import iamPolicies from './lessons/aws/iam-policies.js';
@@ -36,8 +37,8 @@ const SCENARIOS = { ...scenEngReact, ...scenShipDsaSd, ...scenAws };
 const SIMPLE = { ...simpleEng, ...simpleShip, ...simpleAws };
 // lessons that have a Magic Book (js/books/<id>.js, loaded only when opened)
 const BOOKS = new Set(['browser-pipeline', 'dom-vs-vdom', 'render-commit', 'diffing-keys', 'fiber-lanes', 'effect-timing', 'rerenders', 'build-deploy', 'csr-ssr', 'rendering-strategies', 'binary-search', 'load-balancing',
-  'aws-root-iam', 'aws-cli-credentials', 'cdk-bootstrap-deploy', 'iam-policies', 'iam-roles', 's3-basics', 's3-code', 's3-security', 's3-versioning-replication', 's3-events-automation']);
-const AWS_LESSONS = [awsRootIam, awsCliCredentials, cdkBootstrapDeploy, iamPolicies, iamRoles, s3Basics, s3Code, s3Security, s3VersioningReplication, s3EventsAutomation];
+  'aws-root-iam', 'aws-regions', 'aws-cli-credentials', 'cdk-bootstrap-deploy', 'iam-policies', 'iam-roles', 's3-basics', 's3-code', 's3-security', 's3-versioning-replication', 's3-events-automation']);
+const AWS_LESSONS = [awsRootIam, awsRegions, awsCliCredentials, cdkBootstrapDeploy, iamPolicies, iamRoles, s3Basics, s3Code, s3Security, s3VersioningReplication, s3EventsAutomation];
 for (const L of [browserPipeline, domVsVdom, renderCommit, diffingKeys, fiberLanes, effectTiming, rerenders, buildDeploy, csrSsr, renderingStrategies, binarySearch, loadBalancing, ...AWS_LESSONS]) {
   if (SCENARIOS[L.id]) L.scenarios = SCENARIOS[L.id];
   L.book = BOOKS.has(L.id);
@@ -135,10 +136,10 @@ const RAW = [
   {
     id: 'aws', title: 'AWS', short: 'AWS',
     headline: 'AWS from the account up — every click in the console, every line of CDK, every CLI flag explained.',
-    blurb: 'Start with the account itself and how you prove who you are, then IAM permissions, then Amazon S3 in depth. Each step shows the <b>console</b> path, the <b>CLI</b> command and the <b>CDK (TypeScript)</b> code, with the reasoning interviewers and real incidents test.',
+    blurb: 'Start with the account itself, where AWS physically runs (Regions and AZs) and how you prove who you are, then IAM permissions, then Amazon S3 in depth. Each step shows the <b>console</b> path, the <b>CLI</b> command and the <b>CDK (TypeScript)</b> code, with the reasoning interviewers and real incidents test.',
     chapters: [
-      { id: 'access', title: 'Accounts, Identity & Tooling', blurb: 'Root user, IAM users, credentials, the AWS CLI and the CDK toolchain.', lessons: [
-        awsRootIam, awsCliCredentials, cdkBootstrapDeploy,
+      { id: 'access', title: 'Accounts, Regions & Tooling', blurb: 'Root user, IAM users, Regions and Availability Zones, credentials, the AWS CLI and the CDK toolchain.', lessons: [
+        awsRootIam, awsRegions, awsCliCredentials, cdkBootstrapDeploy,
       ] },
       { id: 'iam', title: 'IAM: Roles & Permissions', blurb: 'Policies, evaluation logic, roles and STS — in the console and in CDK.', lessons: [
         iamPolicies, iamRoles,

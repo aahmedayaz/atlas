@@ -2,7 +2,7 @@
 
 A free, interactive engineering course. Every idea is an animated diagram you step through, with code, interview reasoning, scenarios, history and alternatives.
 
-Tabs: **Engineering** (browser, React internals, shipping React) · **DSA** · **System Design** · **AWS** (root user & IAM users, CLI & credentials, CDK bootstrap/deploy, IAM policies & roles, and Amazon S3 in depth).
+Tabs: **Engineering** (browser, React internals, shipping React) · **DSA** · **System Design** · **AWS** (root user & IAM users, Regions & Availability Zones, CLI & credentials, CDK bootstrap/deploy, IAM policies & roles, and Amazon S3 in depth).
 
 **Stack:** plain HTML + CSS + JavaScript ES modules. No framework, no build step, no dependencies. Open it with any static server and deploy it to any static host (Vercel, Netlify, Cloudflare Pages, S3).
 
