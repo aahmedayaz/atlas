@@ -2,6 +2,8 @@
 
 A free, interactive engineering course. Every idea is an animated diagram you step through, with code, interview reasoning, scenarios, history and alternatives.
 
+Tabs: **Engineering** (browser, React internals, shipping React) · **DSA** · **System Design** · **AWS** (root user & IAM users, CLI & credentials, CDK bootstrap/deploy, IAM policies & roles, and Amazon S3 in depth).
+
 **Stack:** plain HTML + CSS + JavaScript ES modules. No framework, no build step, no dependencies. Open it with any static server and deploy it to any static host (Vercel, Netlify, Cloudflare Pages, S3).
 
 ## Run locally
@@ -31,7 +33,7 @@ js/engine/
   player.js           lesson view: walkthrough player + interview / scenarios / history / quiz / cheat sheet
   text.js             prose formatting ([[term]], `code`) and a small syntax highlighter
   icons.js            node icons
-js/lessons/<tab>/*.js one file per lesson — pure data
+js/lessons/<tab>/*.js one file per lesson — pure data (eng, dsa, sd, aws)
 js/scenarios/*.js     Scenario lab cases per lesson
 js/books/<id>.js      Magic Book per lesson: chapters from Basic → Core → Advanced, each with plain-words text,
                       new words explained, a real-life example, a one-line takeaway and a check question

@@ -4,11 +4,17 @@ export const esc = (s) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '
 // Lesson prose is HTML plus two shortcuts:
 //   [[key]] or [[key|shown text]]  → glossary term with a hover/tap definition
 //   `code`                         → inline code (escaped)
+//   **bold**                       → <b>bold</b>
+//   *italic*                       → <i>italic</i> (used for console button and menu names)
 export function fmt(s) {
   if (!s) return '';
-  return String(s)
-    .replace(/`([^`]+)`/g, (_, c) => `<code>${esc(c)}</code>`)
-    .replace(/\[\[([\w-]+)(?:\|([^\]]+))?\]\]/g, (_, k, label) => `<span class="term" tabindex="0" data-t="${k}">${label || k}</span>`);
+  // odd parts are `code` spans (escaped, untouched); even parts get **bold** and [[glossary]] terms
+  return String(s).split(/(`[^`]+`)/g).map((part, i) => (i % 2
+    ? `<code>${esc(part.slice(1, -1))}</code>`
+    : part
+      .replace(/\*\*([^*]+?)\*\*/g, '<b>$1</b>')
+      .replace(/(^|[^*\w])\*([^*\s][^*]*?)\*(?![*\w])/g, '$1<i>$2</i>')
+      .replace(/\[\[([\w-]+)(?:\|([^\]]+))?\]\]/g, (_, k, label) => `<span class="term" tabindex="0" data-t="${k}">${label || k}</span>`))).join('');
 }
 
 const KW = 'const|let|var|function|return|if|else|for|while|do|import|from|export|default|async|await|new|class|extends|this|null|undefined|true|false|typeof|instanceof|try|catch|finally|throw|of|in|switch|case|break|continue|yield|static|super|void|delete|interface|type|enum|implements|public|private|readonly|as|def|elif|lambda|None|True|False|pass|self|not|and|or|is|with';

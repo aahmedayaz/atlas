@@ -9,6 +9,7 @@
   --k-user:#d9577a; --k-browser:#2f86ce; --k-dom:#1f63a0; --k-js:#c99a1a; --k-react:#7c63d0; --k-gpu:#5a43a6; --k-server:#2f86ce; --k-func:#e8834d; --k-cdn:#3fa456;
   --k-db:#e8834d; --k-build:#2a9d8f; --k-code:#64728a; --k-net:#7c63d0; --k-cache:#d9577a; --k-queue:#8c9a3c; --k-lb:#e8834d; --k-note:#9a9286; --k-cell:#2f86ce; --k-file:#2a9d8f; --k-ptr:#d0683a;
   --k-cpu:#1f63a0; --k-eye:#64728a; --k-css:#7c63d0; --k-html:#e8834d; --k-layers:#5a43a6; --k-paint:#d9577a; --k-clock:#2a9d8f; --k-git:#e5534b; --k-key:#a4824e; --k-phone:#2f86ce; --k-search:#5a43a6; --k-fiber:#2a9d8f; --k-lock:#3f8f4e; --k-bolt:#d9577a; --k-tree:#1f63a0;
+  --k-aws:#d9822b; --k-root:#c0392b; --k-iam:#d6344c; --k-s3:#3f8f3a; --k-obj:#5f9e3a; --k-cfn:#c2306f; --k-cli:#56606e; --k-kms:#b0436e; --k-lambda:#e07b00; --k-sts:#7c63d0; --k-policy:#5a43a6; --k-event:#d9577a; --k-sqs:#b0436e; --k-org:#1f63a0; --k-mfa:#2a9d8f;
   --code-bg:#1d1b18; --code-ink:#efe6d6; --code-hl:rgba(178,212,145,.22);
   --grid:rgba(70,65,59,.07);
   --r:12px;
@@ -650,3 +651,6 @@ body.book-open{overflow:hidden}
 :root[data-theme="dark"] .pg.more:after{background:linear-gradient(transparent,#2c2721 60%);color:#c9a983}
 @media (max-width:820px){.pg.more:after{display:none}}
 @media (prefers-reduced-motion:reduce){.bk-leaf{display:none}.book,.bookwrap{transition:none}}
+
+/* inline code never pushes a panel wider (long ARNs, URLs) */
+.narr code,.prose code,.vars code,.fs-drawer code,.pg code,.scen code,.qz code{overflow-wrap:anywhere}
